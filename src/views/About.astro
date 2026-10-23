@@ -1,0 +1,18 @@
+---
+import { format, getLangFromUrl, pageParams, useTranslations } from '../i18n/utils';
+import TextPage from '../layouts/TextPage.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const params = pageParams(lang);
+---
+
+<TextPage
+  title={t.about.title}
+  heading={format(t.about.heading, params)}
+  description={format(t.about.description, params)}
+  lead={t.about.lead}
+  schemaType="AboutPage"
+>
+  <Fragment set:html={format(t.about.bodyHtml, params)} />
+</TextPage>

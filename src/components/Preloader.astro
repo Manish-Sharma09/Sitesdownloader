@@ -1,0 +1,142 @@
+---
+// Page-load intro: the screen is a closed zipper with the logo above the seam. The logo's
+// lightning-bolt pull runs across, then the two halves part to reveal the page. Plays on every
+// page load, never with reduced motion or without JavaScript, and never holds the page for more
+// than 2.4 seconds. The inline script in Layout.astro drives it through <html data-preload="in|out">.
+import Logo from './Logo.astro';
+---
+
+<div class="preloader" aria-hidden="true">
+  <div class="half top">
+    <Logo height={56} class="preloader-logo" />
+  </div>
+  <div class="half bottom"></div>
+  <svg class="pull" data-preloader-pull viewBox="66 56 28 46" width="28" height="46">
+    <defs>
+      <linearGradient id="preloader-bolt" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#F59E0B"></stop>
+        <stop offset="100%" stop-color="#D97706"></stop>
+      </linearGradient>
+    </defs>
+    <path
+      d="M 80 58 L 92 78 H 82 L 84 100 L 68 76 H 78 Z"
+      fill="url(#preloader-bolt)"
+      stroke="#FFFFFF"
+      stroke-width="1.5"
+      stroke-linejoin="round"></path>
+  </svg>
+</div>
+
+<style>
+  /* ---- Tunables ---------------------------------------------------------------------- */
+  .preloader {
+    --tooth: 7px; /* width of one zipper tooth */
+    --teeth-height: 11px; /* each row; the rows overlap by 6px in the middle */
+    --run: 750ms; /* how long the pull takes to cross the screen */
+    --part: 700ms; /* how long the halves take to open */
+
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: none;
+  }
+
+  :global(html[data-preload]) .preloader {
+    display: block;
+  }
+
+  :global(html[data-preload='out']) .preloader {
+    pointer-events: none;
+  }
+
+  .half {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 50%;
+    /* Paper, not the cobalt stage: the logo's blue tile and wordmark would vanish on cobalt. */
+    background: var(--bg);
+    transition: transform var(--part) var(--ease-in-out);
+  }
+
+  .top {
+    top: 0;
+    display: flex;
+    align-items: flex-end;
+    justify-content: center;
+    padding-bottom: 2.5rem;
+    color: var(--ink);
+  }
+
+  .bottom {
+    bottom: 0;
+  }
+
+  .top :global(.preloader-logo) {
+    animation: logo-in 500ms var(--ease-out) 50ms backwards;
+  }
+
+  /* Each half carries one row of teeth; together they interlock along the seam. */
+  .top::after,
+  .bottom::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    right: 0;
+    z-index: 2;
+    height: var(--teeth-height);
+  }
+
+  .top::after {
+    bottom: -3px;
+    background: repeating-linear-gradient(90deg, var(--accent) 0 var(--tooth), transparent var(--tooth) calc(var(--tooth) * 2));
+  }
+
+  .bottom::before {
+    top: -3px;
+    background: repeating-linear-gradient(
+      90deg,
+      transparent 0 var(--tooth),
+      var(--accent) var(--tooth) calc(var(--tooth) * 2)
+    );
+  }
+
+  /* The pull hangs from the seam, like the bolt hangs from the zipper in the logo. */
+  .pull {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    z-index: 3;
+    margin-top: -10px;
+    filter: drop-shadow(0 6px 10px rgb(13 22 51 / 0.35));
+    transform: translateX(-3rem);
+    animation: pull-run var(--run) var(--ease-in-out) 100ms forwards;
+  }
+
+  @keyframes pull-run {
+    to {
+      transform: translateX(calc(100vw + 1rem));
+    }
+  }
+
+  @keyframes logo-in {
+    from {
+      opacity: 0;
+      transform: translateY(10px) scale(0.96);
+    }
+  }
+
+  /* Open: the halves part, taking their teeth with them. */
+  :global(html[data-preload='out']) .top {
+    transform: translateY(-100%);
+  }
+
+  :global(html[data-preload='out']) .bottom {
+    transform: translateY(100%);
+  }
+
+  :global(html[data-preload='out']) .pull {
+    opacity: 0;
+    transition: opacity 200ms var(--ease-in);
+  }
+</style>

@@ -1,0 +1,11 @@
+---
+// The same page in every other language: /es/..., /ja/..., and so on.
+import { LANGS, defaultLang } from '../../i18n/ui';
+import Contact from '../../views/Contact.astro';
+
+export function getStaticPaths() {
+  return LANGS.filter((lang) => lang !== defaultLang).map((lang) => ({ params: { lang } }));
+}
+---
+
+<Contact />

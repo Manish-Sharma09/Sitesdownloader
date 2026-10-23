@@ -1,0 +1,466 @@
+---
+// What ends up in the archive, as an asymmetric bento: the file tree of a typical download (default
+// layout, the folders src/lib/paths.ts produces) as the large tile, and one tile per kind of file
+// with a specimen of it. Pointing at a tile lights up its files in the tree (CSS :has, no script).
+// The tree uses the same per-type colours as the layers of the 3D archive in the hero.
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const t = useTranslations(getLangFromUrl(Astro.url));
+
+type Group = 'html' | 'code' | 'images' | 'fonts';
+interface Row {
+  branch: string;
+  name: string;
+  /** Which kind on the right lights this row up. Folders belong to the kind of the files they hold. */
+  group: Group;
+  kind?: string;
+  size?: string;
+}
+const ROWS: Row[] = [
+  { branch: '├─', name: 'index.html', group: 'html', kind: 'var(--kind-html)', size: '38 KB' },
+  { branch: '├─', name: 'css/', group: 'code' },
+  { branch: '│  ├─', name: 'main.css', group: 'code', kind: 'var(--kind-css)', size: '64 KB' },
+  { branch: '│  └─', name: 'fonts.css', group: 'code', kind: 'var(--kind-css)', size: '2 KB' },
+  { branch: '├─', name: 'js/', group: 'code' },
+  { branch: '│  ├─', name: 'app.js', group: 'code', kind: 'var(--kind-js)', size: '41 KB' },
+  { branch: '│  └─', name: 'vendor.js', group: 'code', kind: 'var(--kind-js)', size: '112 KB' },
+  { branch: '├─', name: 'images/', group: 'images' },
+  { branch: '│  ├─', name: 'hero.jpg', group: 'images', kind: 'var(--kind-image)', size: '284 KB' },
+  { branch: '│  ├─', name: 'hero-800w.jpg', group: 'images', kind: 'var(--kind-image)', size: '96 KB' },
+  { branch: '│  ├─', name: 'bg.webp', group: 'images', kind: 'var(--kind-image)', size: '58 KB' },
+  { branch: '│  └─', name: 'logo.svg', group: 'images', kind: 'var(--kind-image)', size: '3 KB' },
+  { branch: '└─', name: 'fonts/', group: 'fonts' },
+  { branch: '   ├─', name: 'mona-sans.woff2', group: 'fonts', kind: 'var(--kind-font)', size: '46 KB' },
+  { branch: '   └─', name: 'jetbrains-mono.woff2', group: 'fonts', kind: 'var(--kind-font)', size: '31 KB' },
+];
+
+const KINDS: { group: Group; title: string; text: string }[] = [
+  { group: 'html', ...t.features.html },
+  { group: 'code', ...t.features.code },
+  { group: 'images', ...t.features.images },
+  { group: 'fonts', ...t.features.fonts },
+];
+---
+
+<section class="features section band" id="whats-saved" aria-labelledby="features-title">
+  <div class="wrap">
+    <div class="section-head reveal">
+      <h2 id="features-title">{t.features.title}</h2>
+      <p>{t.features.lead}</p>
+    </div>
+
+    <div class="bento">
+      <div class="tile tree reveal" aria-hidden="true">
+        <div class="tree-head"><b class="zip-icon"></b><span translate="no">example.com.zip</span></div>
+        <div class="rows" translate="no">
+          {
+            ROWS.map((row) => (
+              <span class:list={['row', { dir: !row.kind }]} data-group={row.group} style={row.kind && `--kind: ${row.kind}`}>
+                <i class="branch">{row.branch}</i>
+                <span class="name">{row.name}</span>
+                {row.size && <span class="size">{row.size}</span>}
+              </span>
+            ))
+          }
+        </div>
+      </div>
+
+      <article class="tile kind kind-html reveal" data-group="html">
+        <div class="specimen code" aria-hidden="true" translate="no">
+          <span><i>&lt;link</i> href=<mark>"css/main.css"</mark><i>&gt;</i></span>
+          <span><i>&lt;img</i> src=<mark>"images/hero.jpg"</mark><i>&gt;</i></span>
+          <span><i>&lt;script</i> src=<mark>"js/app.js"</mark><i>&gt;</i></span>
+        </div>
+        <h3>{KINDS[0].title}</h3>
+        <p>{KINDS[0].text}</p>
+      </article>
+
+      <article class="tile kind kind-code reveal" data-group="code">
+        <div class="specimen code" aria-hidden="true" translate="no">
+          <span><em>.hero</em> {'{'} background: url(<mark>"../images/bg.webp"</mark>) {'}'}</span>
+          <span><b>import</b> {'{'} slider {'}'} <b>from</b> <mark>"./vendor.js"</mark>;</span>
+        </div>
+        <h3>{KINDS[1].title}</h3>
+        <p>{KINDS[1].text}</p>
+      </article>
+
+      <article class="tile kind kind-images reveal" data-group="images">
+        <div class="specimen thumbs" aria-hidden="true" translate="no">
+          <i style="--h: 100%">1600w</i><i style="--h: 74%">800w</i><i style="--h: 50%">400w</i>
+        </div>
+        <div class="kind-text">
+          <h3>{KINDS[2].title}</h3>
+          <p>{KINDS[2].text}</p>
+        </div>
+      </article>
+
+      <article class="tile kind kind-fonts reveal" data-group="fonts">
+        <div class="specimen type" aria-hidden="true">
+          <span class="aa">Aa</span>
+          <span class="weights"><b style="--wt: 300">Aa</b><b style="--wt: 500">Aa</b><b style="--wt: 750">Aa</b></span>
+        </div>
+        <div class="kind-text">
+          <h3>{KINDS[3].title}</h3>
+          <p>{KINDS[3].text}</p>
+        </div>
+      </article>
+    </div>
+  </div>
+</section>
+
+<style>
+  /* Twelve columns, three rows, every cell filled:
+       tree (7×2) | HTML (5)
+                  | CSS & JS (5)
+       Images (6) | Fonts (6)        */
+  .bento {
+    display: grid;
+    grid-template-columns: repeat(12, minmax(0, 1fr));
+    grid-auto-flow: dense;
+    gap: var(--s-4);
+    margin-top: var(--s-8);
+  }
+
+  .tile {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    padding: var(--s-4);
+    border-radius: var(--r-lg);
+    background: var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      inset 0 1px 0 var(--highlight);
+    overflow: hidden;
+  }
+
+  .tree {
+    grid-column: 1 / span 7;
+    grid-row: 1 / span 2;
+    padding: 0;
+    background: var(--code-bg);
+    color: var(--code-ink);
+    box-shadow: inset 0 0 0 1px var(--code-line);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+  }
+
+  .kind-html {
+    grid-column: 8 / span 5;
+    grid-row: 1;
+  }
+
+  .kind-code {
+    grid-column: 8 / span 5;
+    grid-row: 2;
+  }
+
+  .kind-images {
+    grid-column: 1 / span 6;
+    grid-row: 3;
+  }
+
+  .kind-fonts {
+    grid-column: 7 / span 6;
+    grid-row: 3;
+  }
+
+  /* ---- The archive -------------------------------------------------------------------- */
+  .tree-head {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-4) var(--s-5);
+    border-bottom: 1px solid var(--code-line);
+    color: #edeef2;
+    font-weight: 500;
+  }
+
+  .zip-icon {
+    width: 1rem;
+    height: 1.25rem;
+    border-radius: 3px;
+    background: repeating-linear-gradient(180deg, var(--code-bg) 0 2px, var(--accent) 2px 4px);
+    border: 2px solid var(--accent);
+  }
+
+  .rows {
+    display: grid;
+    padding: var(--s-3) var(--s-5) var(--s-5);
+    line-height: 2;
+  }
+
+  .row {
+    display: grid;
+    grid-template-columns: auto auto minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: var(--s-2);
+    transition: opacity 250ms var(--ease-out);
+  }
+
+  .branch {
+    color: var(--code-muted);
+    font-style: normal;
+    white-space: pre;
+  }
+
+  /* Files carry their type's colour; folders don't. */
+  .row:not(.dir)::before {
+    content: '';
+    grid-column: 2;
+    grid-row: 1;
+    width: 0.5rem;
+    height: 0.5rem;
+    border-radius: 2px;
+    background: var(--kind);
+  }
+
+  .name {
+    grid-column: 3;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .dir .name {
+    grid-column: 2 / 4;
+    color: #edeef2;
+    font-weight: 500;
+  }
+
+  .size {
+    grid-column: 4;
+    color: var(--code-muted);
+    font-size: var(--fs-xs);
+  }
+
+  /* Pointing at a tile dims every other file, so its files stand out in the tree. */
+  .bento:has(.kind[data-group='html']:hover) .row:not([data-group='html']),
+  .bento:has(.kind[data-group='code']:hover) .row:not([data-group='code']),
+  .bento:has(.kind[data-group='images']:hover) .row:not([data-group='images']),
+  .bento:has(.kind[data-group='fonts']:hover) .row:not([data-group='fonts']) {
+    opacity: 0.22;
+  }
+
+  /* ---- The four kinds --------------------------------------------------------------------- */
+  .kind {
+    transition: box-shadow 300ms var(--ease-out);
+  }
+
+  .kind:hover {
+    box-shadow:
+      inset 0 0 0 1px var(--line-strong),
+      inset 0 1px 0 var(--highlight);
+  }
+
+  h3 {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    margin: var(--s-5) var(--s-2) 0;
+    font-size: var(--fs-lg);
+    font-weight: 650;
+    font-stretch: 94%;
+    line-height: 1.25;
+    letter-spacing: -0.02em;
+  }
+
+  /* The kind's colour square, matching the tree and the 3D layers. HTML's own colour is near-white,
+     so on the page it is drawn in ink. CSS & JavaScript share one square, half each. */
+  h3::before {
+    content: '';
+    flex: none;
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 3px;
+  }
+
+  .kind-html h3::before {
+    background: var(--ink);
+  }
+
+  .kind-code h3::before {
+    background: linear-gradient(135deg, var(--kind-css) 50%, var(--kind-js) 50%);
+  }
+
+  .kind-images h3::before {
+    background: var(--kind-image);
+  }
+
+  .kind-fonts h3::before {
+    background: var(--kind-font);
+  }
+
+  .kind p {
+    max-width: 30rem;
+    margin: var(--s-2) var(--s-2) var(--s-2);
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  /* ---- Specimens ----------------------------------------------------------------------- */
+  .specimen {
+    border-radius: var(--r-md);
+    overflow: hidden;
+  }
+
+  .code {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--s-1);
+    min-height: 7.5rem;
+    padding: var(--s-4) var(--s-5);
+    background: var(--code-bg);
+    box-shadow: inset 0 0 0 1px var(--code-line);
+    color: var(--code-ink);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    line-height: 1.8;
+    white-space: nowrap;
+    overflow-x: auto;
+  }
+
+  .code i,
+  .code em {
+    font-style: normal;
+    color: var(--kind-css);
+  }
+
+  .code b {
+    font-weight: 400;
+    color: var(--kind-js);
+  }
+
+  .code mark {
+    padding: 0.1em 0.35em;
+    border-radius: 4px;
+    background: var(--accent-soft);
+    color: var(--accent);
+  }
+
+  /* Images and fonts sit side by side with their words, on a tint of their colour. */
+  .kind-images,
+  .kind-fonts {
+    display: grid;
+    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    align-items: center;
+    gap: var(--s-2);
+  }
+
+  .kind-images {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--kind-image) 12%, var(--surface)), var(--surface) 70%);
+  }
+
+  .kind-fonts {
+    background: linear-gradient(135deg, color-mix(in srgb, var(--kind-font) 14%, var(--surface)), var(--surface) 70%);
+  }
+
+  .kind-text h3 {
+    margin-top: 0;
+  }
+
+  .thumbs {
+    display: flex;
+    align-items: flex-end;
+    gap: var(--s-2);
+    height: 9rem;
+    padding: var(--s-3);
+  }
+
+  .thumbs i {
+    display: flex;
+    align-items: flex-end;
+    justify-content: flex-end;
+    flex: 1;
+    height: var(--h);
+    padding: var(--s-1) var(--s-2);
+    border-radius: var(--r-sm);
+    background:
+      radial-gradient(circle at 72% 28%, rgb(246 167 35 / 0.95) 0 11%, transparent 12%),
+      linear-gradient(160deg, transparent 55%, var(--kind-image) 56%),
+      linear-gradient(200deg, #3a64d8, #1c2b6e);
+    color: rgb(237 238 242 / 0.9);
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    font-style: normal;
+  }
+
+  .type {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--s-2);
+    height: 9rem;
+    padding: var(--s-3) var(--s-4);
+    color: var(--kind-font);
+  }
+
+  .aa {
+    font-family: var(--font-display);
+    font-size: 4rem;
+    font-weight: 700;
+    font-stretch: 85%;
+    line-height: 0.9;
+    letter-spacing: -0.04em;
+  }
+
+  .weights {
+    display: flex;
+    gap: var(--s-3);
+    font-family: var(--font-display);
+    font-size: var(--fs-xl);
+  }
+
+  .weights b {
+    font-weight: var(--wt);
+  }
+
+  @media (max-width: 1000px) {
+    .bento {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+
+    .tree {
+      grid-column: 1 / -1;
+      grid-row: auto;
+    }
+
+    .kind-html,
+    .kind-code,
+    .kind-images,
+    .kind-fonts {
+      grid-column: auto;
+      grid-row: auto;
+    }
+
+    .kind-images,
+    .kind-fonts {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .kind-images .kind-text h3,
+    .kind-fonts .kind-text h3 {
+      margin-top: var(--s-4);
+    }
+  }
+
+  @media (max-width: 640px) {
+    .bento {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .tree {
+      font-size: var(--fs-xs);
+    }
+
+    .tree-head,
+    .rows {
+      padding-inline: var(--s-4);
+    }
+
+    .size {
+      display: none;
+    }
+  }
+</style>

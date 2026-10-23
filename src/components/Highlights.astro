@@ -1,0 +1,323 @@
+---
+// "More than a ZIP file": what sets the tool apart, as a sticky split. The heading stays in view on
+// the left while four panels scroll past on the right, each with a small preview built from the
+// same pieces as the real interface (chips, the score, the page picker, file names).
+// The previews are decorative and hidden from screen readers; the text says the same thing.
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const t = useTranslations(getLangFromUrl(Astro.url));
+const { highlights } = t;
+const [clean, report, pages, single] = highlights.items;
+const TRACKERS = ['Google Tag Manager', 'Meta Pixel', 'Hotjar', 'Microsoft Clarity', 'OneTrust'];
+---
+
+<section class="highlights section" aria-labelledby="highlights-title">
+  <div class="layout wrap">
+    <div class="intro">
+      <div class="section-head reveal">
+        <h2 id="highlights-title">{highlights.title}</h2>
+        <p>{highlights.lead}</p>
+      </div>
+    </div>
+
+    <ul class="panels">
+      <li class="panel reveal">
+        <div class="preview" aria-hidden="true" translate="no">
+          <ul class="trackers">
+            {TRACKERS.map((name) => <li>{name}</li>)}
+          </ul>
+        </div>
+        <h3>{clean.title}</h3>
+        <p>{clean.text}</p>
+      </li>
+
+      <li class="panel reveal">
+        <div class="preview report" aria-hidden="true">
+          <p class="score"><b>97%</b><span class="meter"><i></i></span></p>
+          <ul class="swatches" translate="no">
+            <li style="--c: #ff6200"></li>
+            <li style="--c: #036aab"></li>
+            <li style="--c: #131a2c"></li>
+            <li style="--c: #ffebdf"></li>
+          </ul>
+          <ul class="tags" translate="no">
+            <li>WordPress</li>
+            <li>proxima-nova</li>
+            <li>3.8 MB</li>
+          </ul>
+        </div>
+        <h3>{report.title}</h3>
+        <p>{report.text}</p>
+      </li>
+
+      <li class="panel reveal">
+        <div class="preview" aria-hidden="true">
+          <ul class="picks" translate="no">
+            <li class="on"><i></i>/</li>
+            <li class="on"><i></i>/pricing</li>
+            <li class="on"><i></i>/features</li>
+            <li><i></i>/blog</li>
+          </ul>
+        </div>
+        <h3>{pages.title}</h3>
+        <p>{pages.text}</p>
+      </li>
+
+      <li class="panel reveal">
+        <div class="preview files" aria-hidden="true" translate="no">
+          <span class="file html"><b></b>example.com.html</span>
+          <span class="divider"></span>
+          <span class="file"><b class="folder"></b>desktop/</span>
+          <span class="file"><b class="folder"></b>mobile/</span>
+        </div>
+        <h3>{single.title}</h3>
+        <p>{single.text}</p>
+      </li>
+    </ul>
+  </div>
+</section>
+
+<style>
+  .layout {
+    display: grid;
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    gap: clamp(2.5rem, 7vw, 7rem);
+    align-items: start;
+  }
+
+  .intro {
+    position: sticky;
+    top: 8rem;
+  }
+
+  .panels {
+    display: grid;
+    gap: var(--s-6);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .panel {
+    padding: var(--s-4) var(--s-4) var(--s-6);
+    border-radius: var(--r-xl);
+    background: var(--shell);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  h3 {
+    margin: var(--s-6) var(--s-3) 0;
+    font-size: var(--fs-xl);
+    font-weight: 650;
+    font-stretch: 94%;
+    line-height: 1.2;
+    letter-spacing: -0.025em;
+  }
+
+  .panel > p {
+    max-width: 32rem;
+    margin: var(--s-2) var(--s-3) 0;
+    color: var(--muted);
+    font-size: var(--fs-md);
+    text-wrap: pretty;
+  }
+
+  /* ---- Previews: an inset plate holding a piece of the interface --------------------------- */
+  .preview {
+    display: grid;
+    place-items: center;
+    min-height: 13rem;
+    padding: var(--s-6);
+    border-radius: calc(var(--r-xl) - var(--s-4) + 4px);
+    background:
+      radial-gradient(70% 90% at 50% 0%, var(--accent-soft), transparent 70%),
+      var(--surface);
+    box-shadow:
+      inset 0 0 0 1px var(--line),
+      inset 0 1px 0 var(--highlight);
+    overflow: hidden;
+  }
+
+  .preview ul {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* Clean copy: the tags it takes out, struck through */
+  .trackers {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-2);
+    max-width: 26rem;
+  }
+
+  .trackers li {
+    padding: 0.375rem var(--s-4);
+    border-radius: var(--r-pill);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--line);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    text-decoration: line-through;
+    text-decoration-color: var(--danger);
+    text-decoration-thickness: 1.5px;
+  }
+
+  /* Report: score, palette, a few findings */
+  .report {
+    gap: var(--s-4);
+  }
+
+  .score {
+    display: flex;
+    align-items: center;
+    gap: var(--s-4);
+    width: min(100%, 20rem);
+  }
+
+  .score b {
+    font-family: var(--font-display);
+    font-size: 3rem;
+    font-weight: 700;
+    font-stretch: 88%;
+    line-height: 1;
+    letter-spacing: -0.04em;
+  }
+
+  .meter {
+    flex: 1;
+    height: 6px;
+    border-radius: var(--r-pill);
+    background: var(--line);
+    overflow: hidden;
+  }
+
+  .meter i {
+    display: block;
+    width: 97%;
+    height: 100%;
+    border-radius: inherit;
+    background: var(--ok);
+  }
+
+  .swatches {
+    display: flex;
+    gap: var(--s-2);
+  }
+
+  .swatches li {
+    width: 2rem;
+    height: 2rem;
+    border-radius: 50%;
+    background: var(--c);
+    box-shadow: inset 0 0 0 1px var(--line-strong);
+  }
+
+  .tags {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: var(--s-2);
+  }
+
+  .tags li {
+    padding: 0.25rem var(--s-3);
+    border-radius: var(--r-pill);
+    background: var(--surface-2);
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+  }
+
+  /* Several pages: a slice of the page picker */
+  .picks {
+    display: grid;
+    gap: var(--s-1);
+    width: min(100%, 18rem);
+    padding: var(--s-2);
+    border-radius: var(--r-md);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+  }
+
+  .picks li {
+    display: flex;
+    align-items: center;
+    gap: var(--s-3);
+    padding: var(--s-2) var(--s-3);
+    border-radius: var(--r-sm);
+    color: var(--muted);
+  }
+
+  .picks li.on {
+    color: var(--ink);
+  }
+
+  .picks i {
+    width: 1rem;
+    height: 1rem;
+    border-radius: 4px;
+    box-shadow: inset 0 0 0 1.5px var(--line-strong);
+  }
+
+  .picks .on i {
+    background:
+      no-repeat center / 70% url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='m3.5 8.5 3 3 6-7' fill='none' stroke='%23140e02' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"),
+      var(--accent);
+    box-shadow: none;
+  }
+
+  /* One file, or both versions */
+  .files {
+    display: flex;
+    flex-wrap: wrap;
+    align-content: center;
+    justify-content: center;
+    gap: var(--s-3);
+  }
+
+  .file {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    padding: var(--s-2) var(--s-4) var(--s-2) var(--s-3);
+    border-radius: var(--r-pill);
+    background: var(--bg);
+    box-shadow: inset 0 0 0 1px var(--line);
+    font-family: var(--font-mono);
+    font-size: var(--fs-sm);
+  }
+
+  .file b {
+    width: 0.875rem;
+    height: 1.125rem;
+    border-radius: 3px;
+    background: var(--kind-html);
+  }
+
+  .file b.folder {
+    width: 1.125rem;
+    height: 0.875rem;
+    background: var(--kind-css);
+  }
+
+  .divider {
+    flex-basis: 100%;
+    max-width: 12rem;
+    height: 1px;
+    background: var(--line-strong);
+  }
+
+  @media (max-width: 900px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .intro {
+      position: static;
+    }
+  }
+</style>

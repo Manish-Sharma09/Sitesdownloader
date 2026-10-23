@@ -1,0 +1,34 @@
+---
+import { SITE } from '../config';
+import { format, getLangFromUrl, pageParams, useTranslations } from '../i18n/utils';
+import TextPage from '../layouts/TextPage.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const params = pageParams(lang);
+// The policy describes analytics only when Google Analytics is actually switched on.
+const analytics = Boolean(import.meta.env.PUBLIC_GA_ID);
+const escape = (text: string) => text.replace(/[&<>]/g, (c) => `&#${c.charCodeAt(0)};`);
+
+const html = [
+  format(t.privacy.shortHtml, {
+    ...params,
+    analyticsSummary: escape(analytics ? t.privacy.analyticsSummaryOn : t.privacy.analyticsSummaryOff),
+  }),
+  format(t.privacy.givenHtml, params),
+  analytics ? t.privacy.analyticsHtml : '',
+  `<h2>${escape(t.privacy.cookiesTitle)}</h2>`,
+  `<p>${escape(analytics ? t.privacy.cookiesOn : t.privacy.cookiesOff)}</p>`,
+  format(t.privacy.restHtml, params),
+].join('\n');
+---
+
+<TextPage
+  title={t.privacy.title}
+  heading={t.privacy.heading}
+  description={format(t.privacy.description, params)}
+  lead={format(t.privacy.lead, params)}
+  updated={SITE.legalUpdated}
+>
+  <Fragment set:html={html} />
+</TextPage>

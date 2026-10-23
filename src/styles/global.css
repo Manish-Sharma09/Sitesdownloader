@@ -1,0 +1,718 @@
+/* ==========================================================================
+   Tokens
+   ========================================================================== */
+
+/* One theme per page, dark by default: a near-black canvas with soft light, hairlines and grain.
+   Visitors can switch to the light theme with the switch in the header (stored as
+   <html data-theme="light|dark">). Every section uses the same canvas; depth comes from light,
+   nested panels and tints of the same palette, never from a block of another colour. */
+
+:root {
+  /* Canvas and surfaces (cool off-black, never #000) */
+  --bg: #07080b;
+  --bg-2: #0b0d12;
+  --surface: #101219;
+  --surface-2: #171a23;
+  /* Outer shell of a double-bezel panel, and the inset highlight along its inner top edge */
+  --shell: rgb(255 255 255 / 0.035);
+  --highlight: rgb(255 255 255 / 0.07);
+  --ink: #edeef2;
+  --muted: #8f95a4;
+  --faint: #626876;
+  --line: rgb(255 255 255 / 0.08);
+  --line-strong: rgb(255 255 255 / 0.15);
+
+  /* The one accent: the amber of the logo's lightning-bolt pull. It marks what you can act on. */
+  --accent: #f6a723;
+  --accent-strong: #ffbd4a;
+  --on-accent: #140e02;
+  --accent-soft: rgb(246 167 35 / 0.14);
+  --focus: #f6a723;
+  --danger: #ff7d69;
+  --ok: #3fd99a;
+  --switch-off: rgb(255 255 255 / 0.14);
+
+  /* Ambient light behind the hero and the closing call to action */
+  --glow-warm: rgb(246 167 35 / 0.16);
+  --glow-cool: rgb(70 110 240 / 0.14);
+  --grain-opacity: 0.055;
+
+  /* Floating header: a clear glass at the top of the page (--header-glass) that frosts over
+     (--header-bg) once the page scrolls under it, with a lit edge and a pointer sheen. */
+  --header-glass: rgb(22 25 34 / 0.36);
+  --header-bg: rgb(14 16 22 / 0.74);
+  --header-edge: rgb(255 255 255 / 0.22);
+  --header-sheen: rgb(255 255 255 / 0.08);
+  --header-border: rgb(255 255 255 / 0.09);
+  --header-ink: #edeef2;
+  --header-muted: #8f95a4;
+  --header-hover: rgb(255 255 255 / 0.06);
+
+  /* Code specimens and the archive file tree are dark in both themes */
+  --code-bg: #0c0e14;
+  --code-ink: rgb(237 238 242 / 0.8);
+  --code-muted: rgb(237 238 242 / 0.42);
+  --code-line: rgb(237 238 242 / 0.09);
+
+  /* Logo wordmark gradient ("Downloader"): the logo's own blue, lifted on dark canvases */
+  --logo-blue-1: #93c5fd;
+  --logo-blue-2: #60a5fa;
+
+  /* One colour per file type: the 3D layers, the archive tree and the result panel use these.
+     They are a legend for data, not accents. */
+  --kind-html: #edf0f8;
+  --kind-css: #5b8def;
+  --kind-js: #ee7bb8;
+  --kind-image: #3cc48a;
+  --kind-font: #a284f5;
+
+  /* Noto Sans JP/KR are only loaded on Japanese and Korean pages; elsewhere they are skipped. */
+  --font-display: 'Bricolage Grotesque', 'Geist', 'Noto Sans JP', 'Noto Sans KR', system-ui, sans-serif;
+  --font-sans: 'Geist', 'Noto Sans JP', 'Noto Sans KR', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  /* Type scale: major third from 16px, display sizes fluid */
+  --fs-xs: 0.8125rem;
+  --fs-sm: 0.875rem;
+  --fs-base: 1rem;
+  --fs-md: 1.125rem;
+  --fs-lg: 1.25rem;
+  --fs-xl: 1.5625rem;
+  --fs-2xl: clamp(2.125rem, 1.35rem + 2.9vw, 3.5rem);
+  --fs-hero: clamp(2.75rem, 1.55rem + 4.4vw, 5.25rem);
+  --fs-display: clamp(3rem, 1.2rem + 6.4vw, 7rem);
+
+  /* 8pt spacing */
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: 4rem;
+  --s-9: 6rem;
+  --s-10: 8rem;
+
+  /* Shape rule: controls (buttons, fields, chips, segmented controls) are full pills; panels are
+     28px outer / 22px inner (double bezel); tiles and wells inside panels are 16px; code chips 8px. */
+  --r-sm: 8px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+  --r-pill: 999px;
+  --bezel: 6px;
+
+  /* Motion: weighty, spring-like curves. No linear or default ease. */
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in: cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --ease-spring: cubic-bezier(0.32, 0.72, 0, 1);
+
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.45);
+  --shadow-md: 0 24px 48px -28px rgb(0 0 0 / 0.75);
+  --shadow-panel: 0 48px 96px -48px rgb(0 0 0 / 0.85);
+
+  /* Z-index scale: page < header < grain < preloader */
+  --z-header: 50;
+  --z-grain: 60;
+  --z-preloader: 1000;
+
+  --gutter: clamp(1rem, 4vw, 3rem);
+  --max: 78rem;
+
+  --theme-dark: 1; /* 1 in dark, 0 in light: lets CSS interpolate theme-dependent shapes */
+
+  /* Kept for components that still speak of the "stage": it is now the same canvas. */
+  --stage-ink: var(--ink);
+  --stage-muted: var(--muted);
+  --stage-line: var(--line);
+
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  --bg: #f3f4f7;
+  --bg-2: #eceef2;
+  --surface: #ffffff;
+  --surface-2: #f1f2f6;
+  --shell: rgb(12 14 20 / 0.035);
+  --highlight: rgb(255 255 255 / 0.95);
+  --ink: #0c0e13;
+  --muted: #5a6070;
+  --faint: #8a90a0;
+  --line: rgb(12 14 20 / 0.08);
+  --line-strong: rgb(12 14 20 / 0.16);
+  --accent: #f6a723;
+  --accent-strong: #ffb938;
+  --accent-soft: rgb(246 167 35 / 0.18);
+  --focus: #0c0e13;
+  --danger: #c4321c;
+  --ok: #0f7f58;
+  --switch-off: rgb(12 14 20 / 0.16);
+  --glow-warm: rgb(246 167 35 / 0.22);
+  --glow-cool: rgb(70 110 240 / 0.12);
+  --grain-opacity: 0.04;
+  --header-glass: rgb(255 255 255 / 0.46);
+  --header-bg: rgb(255 255 255 / 0.8);
+  --header-edge: rgb(255 255 255 / 0.95);
+  --header-sheen: rgb(255 255 255 / 0.8);
+  --header-border: rgb(12 14 20 / 0.08);
+  --header-ink: #0c0e13;
+  --header-muted: #5a6070;
+  --header-hover: rgb(12 14 20 / 0.05);
+  --logo-blue-1: #2563eb;
+  --logo-blue-2: #1d4ed8;
+  --kind-html: #edf0f8;
+  --shadow-sm: 0 1px 2px rgb(12 14 20 / 0.06);
+  --shadow-md: 0 24px 48px -28px rgb(12 14 20 / 0.22);
+  --shadow-panel: 0 48px 96px -48px rgb(12 14 20 / 0.3);
+  --theme-dark: 0;
+  color-scheme: light;
+}
+
+/* ==========================================================================
+   Base
+   ========================================================================== */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-text-size-adjust: 100%;
+  scroll-padding-top: 6rem;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+body {
+  margin: 0;
+  overflow-x: clip;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  font-size: var(--fs-base);
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Film grain over the whole page, so flat surfaces read as material. Fixed, never scrolled. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-grain);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 0 0.5 0 0 0 1 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  opacity: var(--grain-opacity);
+  pointer-events: none;
+}
+
+h1,
+h2,
+h3,
+p,
+figure {
+  margin: 0;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+}
+
+svg {
+  display: block;
+}
+
+a {
+  color: inherit;
+}
+
+a,
+button,
+summary,
+label,
+input {
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: rgb(246 167 35 / 0.2);
+}
+
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+/* Japanese and Korean: CJK glyphs need normal tracking and more line height than the display
+   face uses, and Korean should wrap between words rather than inside them. */
+:root:is(:lang(ja), :lang(ko)) :is(h1, h2, h3) {
+  letter-spacing: 0;
+  line-height: 1.25;
+}
+
+:root:lang(ja) {
+  line-break: strict;
+}
+
+/* Headlines break between phrases, never before a particle such as を (Chrome; others fall back). */
+:root:lang(ja) :is(h1, h2, h3) {
+  word-break: auto-phrase;
+}
+
+/* CJK characters are full-width, so the hero headline is set smaller than the Latin one, scaled
+   to its column (the hero copy is a size container). */
+:root:is(:lang(ja), :lang(ko)) .hero h1 {
+  font-size: clamp(1.875rem, 7cqi, 3.25rem);
+}
+
+:root:lang(ko) {
+  word-break: keep-all;
+}
+
+/* ==========================================================================
+   Layout helpers
+   ========================================================================== */
+
+.wrap {
+  width: 100%;
+  max-width: calc(var(--max) + var(--gutter) * 2);
+  margin-inline: auto;
+  padding-inline: var(--gutter);
+}
+
+.section {
+  padding-block: clamp(5rem, 10vw, 8.5rem) clamp(5.5rem, 11vw, 9.5rem);
+}
+
+/* A slightly lifted tint of the same canvas, to set neighbouring sections apart without a seam. */
+.band {
+  background: linear-gradient(180deg, transparent, var(--bg-2) 12%, var(--bg-2) 88%, transparent);
+}
+
+.section-head {
+  max-width: 46rem;
+}
+
+.section-head h2 {
+  font-size: var(--fs-2xl);
+  font-weight: 650;
+  font-stretch: 92%;
+  line-height: 1.02;
+  letter-spacing: -0.035em;
+  text-wrap: balance;
+}
+
+.section-head p {
+  max-width: 36rem;
+  margin-top: var(--s-5);
+  color: var(--muted);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+/* The ambient backdrop behind the hero, page headers, the closing call to action and error pages:
+   soft light from two sides on the same canvas. */
+.stage {
+  position: relative;
+  isolation: isolate;
+  color: var(--ink);
+  overflow: clip;
+}
+
+.stage::before {
+  content: '';
+  position: absolute;
+  inset: -20% -10% auto;
+  height: 120%;
+  z-index: -2;
+  background:
+    radial-gradient(40% 45% at var(--glow-x, 72%) var(--glow-y, 40%), var(--glow-warm), transparent 70%),
+    radial-gradient(35% 40% at calc(100% - var(--glow-x, 72%) + 10%) 10%, var(--glow-cool), transparent 70%);
+  pointer-events: none;
+}
+
+/* A floor of hairlines receding under the hero object. Each stage decides where it shows. */
+.stage-grid {
+  position: absolute;
+  inset: auto -30% 0 -30%;
+  height: 60%;
+  z-index: -1;
+  background-image:
+    linear-gradient(to right, var(--line) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--line) 1px, transparent 1px);
+  background-size: 64px 64px;
+  transform: perspective(700px) rotateX(64deg);
+  transform-origin: 50% 100%;
+  mask-image: var(--grid-mask, radial-gradient(60% 80% at 50% 100%, black 20%, transparent 75%));
+  pointer-events: none;
+}
+
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+/* ==========================================================================
+   Double-bezel panels: a hairline tray with the content plate sitting inside it
+   ========================================================================== */
+
+.bezel {
+  padding: var(--bezel);
+  border-radius: var(--r-xl);
+  background: var(--shell);
+  box-shadow:
+    inset 0 0 0 1px var(--line),
+    var(--shadow-panel);
+}
+
+.bezel > .core {
+  border-radius: calc(var(--r-xl) - var(--bezel));
+  background: var(--surface);
+  box-shadow:
+    inset 0 1px 0 var(--highlight),
+    0 0 0 1px var(--line);
+}
+
+/* ==========================================================================
+   Buttons: pills, with the icon in its own nested circle
+   ========================================================================== */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--s-3);
+  min-height: 3rem;
+  padding: 0 var(--s-5);
+  border: 0;
+  border-radius: var(--r-pill);
+  font: inherit;
+  font-weight: 600;
+  font-size: var(--fs-base);
+  letter-spacing: -0.005em;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  transition:
+    transform 300ms var(--ease-spring),
+    background-color 200ms var(--ease-out),
+    box-shadow 200ms var(--ease-out);
+}
+
+.btn:active {
+  transform: scale(0.97);
+}
+
+/* A button with a trailing icon gets less padding on that side, so the circle sits flush. */
+.btn:has(.btn-icon) {
+  padding-right: 0.375rem;
+}
+
+.btn-icon {
+  display: grid;
+  place-items: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  margin-left: var(--s-1);
+  border-radius: 50%;
+  background: rgb(20 14 2 / 0.12);
+  transition: transform 400ms var(--ease-spring);
+}
+
+.btn-icon svg {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.btn:hover .btn-icon {
+  transform: translateY(2px) scale(1.06);
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: var(--on-accent);
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.45),
+    inset 0 -1px 0 rgb(120 66 0 / 0.25),
+    0 10px 24px -14px rgb(150 85 0 / 0.9);
+}
+
+.btn-primary:hover {
+  background: var(--accent-strong);
+}
+
+.btn-primary:disabled {
+  cursor: progress;
+  opacity: 0.85;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: var(--ink);
+  box-shadow: inset 0 0 0 1px var(--line-strong);
+}
+
+.btn-ghost:hover {
+  background: var(--shell);
+}
+
+.btn-ghost .btn-icon {
+  background: var(--surface-2);
+}
+
+/* ==========================================================================
+   Scroll reveal: section heads and tiles rise into place as they enter the viewport.
+   CSS scroll-driven animation, so no script; browsers without it simply show everything.
+   ========================================================================== */
+
+@supports (animation-timeline: view()) {
+  @media (prefers-reduced-motion: no-preference) {
+    .reveal {
+      animation: reveal linear both;
+      animation-timeline: view();
+      animation-range: entry 5% cover 28%;
+    }
+  }
+}
+
+@keyframes reveal {
+  from {
+    opacity: 0;
+    transform: translateY(32px) scale(0.985);
+  }
+}
+
+/* ==========================================================================
+   Long-form text: the SEO article, legal pages, about and contact
+   ========================================================================== */
+
+.prose {
+  max-width: 40rem;
+  color: color-mix(in srgb, var(--ink) 86%, var(--muted));
+  font-size: var(--fs-md);
+  line-height: 1.75;
+  text-wrap: pretty;
+}
+
+.prose h2 {
+  margin-top: var(--s-8);
+  color: var(--ink);
+  font-size: var(--fs-xl);
+  font-weight: 650;
+  font-stretch: 94%;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+  text-wrap: balance;
+  scroll-margin-top: 6rem;
+}
+
+.prose h3 {
+  margin-top: var(--s-7);
+  color: var(--ink);
+  font-size: var(--fs-lg);
+  font-weight: 650;
+  font-stretch: 95%;
+  line-height: 1.3;
+  letter-spacing: -0.015em;
+  text-wrap: balance;
+  scroll-margin-top: 6rem;
+}
+
+.prose :is(h2, h3):first-child {
+  margin-top: 0;
+}
+
+.prose :is(h2, h3) + p {
+  margin-top: var(--s-3);
+}
+
+.prose p,
+.prose ul,
+.prose ol {
+  margin: var(--s-4) 0 0;
+}
+
+.prose ul {
+  padding-left: var(--s-5);
+}
+
+.prose li + li {
+  margin-top: var(--s-2);
+}
+
+.prose li::marker {
+  color: var(--faint);
+}
+
+/* Ordered lists are real sequences (how-to steps), so they get proper numbers. */
+.prose ol {
+  padding: 0;
+  list-style: none;
+  counter-reset: prose-step;
+}
+
+.prose ol > li {
+  position: relative;
+  padding-left: 2.75rem;
+  counter-increment: prose-step;
+}
+
+.prose ol > li + li {
+  margin-top: var(--s-3);
+}
+
+.prose ol > li::before {
+  content: counter(prose-step);
+  position: absolute;
+  left: 0;
+  top: 0.125em;
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border-radius: 50%;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+  color: var(--ink);
+  font-family: var(--font-mono);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  line-height: 1;
+}
+
+.prose a {
+  color: var(--ink);
+  text-decoration-color: var(--accent);
+  text-decoration-thickness: 1.5px;
+  text-underline-offset: 0.2em;
+  transition: color 160ms var(--ease-out);
+}
+
+.prose a:hover {
+  color: var(--accent);
+}
+
+.prose strong {
+  color: var(--ink);
+  font-weight: 600;
+}
+
+.prose code {
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  padding: 0.12em 0.45em;
+  border-radius: 6px;
+  background: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
+}
+
+/* ==========================================================================
+   Skip link
+   ========================================================================== */
+
+.skip-link {
+  position: absolute;
+  left: var(--s-4);
+  top: -4rem;
+  z-index: 100;
+  padding: var(--s-3) var(--s-4);
+  border-radius: var(--r-pill);
+  background: var(--accent);
+  color: var(--on-accent);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus-visible {
+  top: var(--s-4);
+}
+
+/* ==========================================================================
+   Page transitions: cross-document view transitions, no JavaScript needed
+   ========================================================================== */
+
+@view-transition {
+  navigation: auto;
+}
+
+::view-transition-old(root) {
+  animation: vt-out 180ms var(--ease-in) both;
+}
+
+::view-transition-new(root) {
+  animation: vt-in 320ms var(--ease-out) both;
+}
+
+@keyframes vt-out {
+  to {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+}
+
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+}
+
+/* Theme switch: the new theme grows in a circle from the switch (ThemeToggle.astro animates the
+   clip-path). Turn off the page-navigation animations and keep the header in the same snapshot. */
+html.theme-switching::view-transition-old(root),
+html.theme-switching::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+html.theme-switching .site-header {
+  view-transition-name: none;
+}
+
+/* Preloader: hold the hero's own entrance until the zipper opens, so it plays in view. */
+html[data-preload='in'] .hero,
+html[data-preload='in'] .hero * {
+  animation-play-state: paused !important;
+}
+
+/* ==========================================================================
+   Reduced motion: every state change still happens, without the movement
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+  }
+
+  @view-transition {
+    navigation: none;
+  }
+}

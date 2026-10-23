@@ -1,0 +1,176 @@
+---
+import '../styles/global.css';
+import { SITE } from '../config';
+import Footer from '../components/Footer.astro';
+import Header from '../components/Header.astro';
+import Preloader from '../components/Preloader.astro';
+import {
+  LANGS,
+  LANGUAGES,
+  absoluteUrl,
+  basePath,
+  defaultLang,
+  getLangFromUrl,
+  localizePath,
+  useTranslations,
+} from '../i18n/utils';
+
+interface Props {
+  /** Page title, before the brand. Defaults to the home page title in the current language. */
+  title?: string;
+  description?: string;
+  /** Keep the page out of search results (error pages). */
+  noindex?: boolean;
+  /** Structured data objects, each rendered as its own JSON-LD script. */
+  jsonLd?: object[];
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const { title, description = t.meta.homeDescription, noindex = false, jsonLd = [] } = Astro.props;
+
+const fullTitle = `${title ?? t.meta.homeTitle} | ${SITE.name}`;
+const base = basePath(Astro.url);
+const canonical = absoluteUrl(localizePath(base, lang));
+const ogImage = absoluteUrl('/og-image.png');
+const gaId = import.meta.env.PUBLIC_GA_ID;
+// Japanese and Korean pages also load a CJK typeface; Mona Sans covers Latin scripts only.
+const cjkFont = { ja: 'Noto+Sans+JP:wght@400..800', ko: 'Noto+Sans+KR:wght@400..800' }[lang as 'ja' | 'ko'];
+---
+
+<!doctype html>
+<html lang={LANGUAGES[lang].htmlLang}>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+
+        // Apply a saved theme before the first paint, so the page never flashes the wrong one.
+        // Without one the page is dark (the :root tokens); light is a choice made with the switch.
+        try {
+          var saved = localStorage.getItem('theme');
+          if (saved === 'light' || saved === 'dark') root.dataset.theme = saved;
+        } catch (e) {}
+
+        // Page transitions keep the header in place (html.vt-header names it, see Header.astro). The
+        // name is only set while a transition runs: a view-transition-name all the time would cut the
+        // header's glass off from the page behind it, and its blur would stop working.
+        var nameHeader = function (event) {
+          if (!event.viewTransition) return;
+          root.classList.add('vt-header');
+          event.viewTransition.finished.finally(function () {
+            root.classList.remove('vt-header');
+          });
+        };
+        addEventListener('pageswap', nameHeader);
+        addEventListener('pagereveal', nameHeader);
+        addEventListener('pageshow', function (event) {
+          if (event.persisted) root.classList.remove('vt-header');
+        });
+
+        // Preloader: every page load, never with reduced motion.
+        if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+        root.dataset.preload = 'in';
+        var MAX_MS = 2400; // never hold the page longer than this
+        var loaded = false;
+        var pulled = false;
+        var open = function () {
+          if (root.dataset.preload !== 'in') return;
+          root.dataset.preload = 'out';
+          setTimeout(function () {
+            delete root.dataset.preload;
+          }, 800);
+        };
+        // Open once the page and its fonts are ready AND the zipper pull has crossed the screen.
+        var maybeOpen = function () {
+          if (loaded && pulled) open();
+        };
+        addEventListener('animationend', function (event) {
+          if (event.target instanceof Element && event.target.hasAttribute('data-preloader-pull')) {
+            pulled = true;
+            maybeOpen();
+          }
+        });
+        addEventListener('load', function () {
+          (document.fonts ? document.fonts.ready : Promise.resolve()).then(function () {
+            loaded = true;
+            maybeOpen();
+          });
+        });
+        setTimeout(open, MAX_MS);
+      })();
+    </script>
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    {noindex ? <meta name="robots" content="noindex, follow" /> : <link rel="canonical" href={canonical} />}
+    {
+      !noindex &&
+        LANGS.map((l) => (
+          <link rel="alternate" hreflang={LANGUAGES[l].hreflang} href={absoluteUrl(localizePath(base, l))} />
+        ))
+    }
+    {!noindex && <link rel="alternate" hreflang="x-default" href={absoluteUrl(localizePath(base, defaultLang))} />}
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={SITE.name} />
+    <meta property="og:locale" content={LANGUAGES[lang].ogLocale} />
+    {LANGS.filter((l) => l !== lang).map((l) => <meta property="og:locale:alternate" content={LANGUAGES[l].ogLocale} />)}
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content={t.meta.ogImageAlt} />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogImage} />
+
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" href="/favicon-96x96.png" sizes="96x96" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="apple-mobile-web-app-title" content={SITE.name} />
+    <meta name="theme-color" content="#07080b" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wdth,wght@12..96,75..100,200..800&family=Geist:wght@100..900&family=Geist+Mono:wght@400..600&display=swap"
+    />
+    {cjkFont && <link rel="stylesheet" href={`https://fonts.googleapis.com/css2?family=${cjkFont}&display=swap`} />}
+
+    {jsonLd.map((data) => <script type="application/ld+json" set:html={JSON.stringify(data)} />)}
+
+    {
+      gaId && (
+        <>
+          <script async src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+          <script is:inline define:vars={{ gaId }}>
+            window.dataLayer = window.dataLayer || [];
+            window.gtag = function () {
+              window.dataLayer.push(arguments);
+            };
+            window.gtag('js', new Date());
+            window.gtag('config', gaId);
+          </script>
+        </>
+      )
+    }
+  </head>
+  <body>
+    <Preloader />
+    <a class="skip-link" href="#main">{t.common.skipToContent}</a>
+    <Header />
+    <main id="main">
+      <slot />
+    </main>
+    <Footer />
+  </body>
+</html>

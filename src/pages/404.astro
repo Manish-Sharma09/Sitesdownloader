@@ -1,0 +1,22 @@
+---
+// Every missing URL. Rendered on demand (not prerendered), so it comes back in the language of the
+// address that was asked for: /de/missing shows the German page, header and footer included.
+import ErrorPage from '../components/ErrorPage.astro';
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import Layout from '../layouts/Layout.astro';
+
+export const prerender = false;
+
+const t = useTranslations(getLangFromUrl(Astro.url)).notFound;
+// Shown as typed, decoded so a non-Latin path reads as text; Astro escapes it on output.
+let path = Astro.url.pathname;
+try {
+  path = decodeURIComponent(path);
+} catch {
+  // A malformed escape: show it as it came.
+}
+---
+
+<Layout title={t.title} description={t.description} noindex>
+  <ErrorPage code="404" heading={t.heading} text={t.text} button={t.button} path={path.slice(0, 120)} />
+</Layout>

@@ -1,0 +1,486 @@
+---
+import { getLangFromUrl, localizePath, useTranslations } from '../i18n/utils';
+import LanguagePicker from './LanguagePicker.astro';
+import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const home = localizePath('/', lang);
+const anchor = (id: string) => `${home === '/' ? '' : home}/#${id}`;
+const NAV = [
+  { href: anchor('how-it-works'), label: t.nav.howItWorks },
+  { href: anchor('whats-saved'), label: t.nav.whatsSaved },
+  { href: anchor('faq'), label: t.nav.faq },
+];
+---
+
+<header class="site-header" data-site-header>
+  <div class="bar">
+    <span class="glass" aria-hidden="true"><span class="sheen"></span></span>
+    <a href={home} class="brand" translate="no">
+      <Logo height={32} class="brand-full" />
+      <Logo variant="mark" height={32} class="brand-mark" />
+    </a>
+    <nav aria-label={t.nav.mainLabel}>
+      <span class="nav-pill" aria-hidden="true"></span>
+      <ul>
+        {
+          NAV.map((item) => (
+            <li>
+              <a href={item.href}>{item.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <LanguagePicker />
+    <ThemeToggle />
+    <a href={anchor('top')} class="cta" data-focus-url>
+      <span>{t.nav.cta}</span>
+      <span class="cta-icon" aria-hidden="true">
+        <svg viewBox="0 0 20 20" width="14" height="14"><path d="M10 4v10m0 0 4-4m-4 4-4-4"></path></svg>
+      </span>
+    </a>
+  </div>
+</header>
+
+<script>
+  // The header's motion, all of it transform/opacity:
+  // - data-scrolled: once the page moves under it, the glass frosts over and the shadow deepens.
+  // - data-hidden: scrolling down tucks it away, scrolling up brings it back. Never while a menu
+  //   is open or keyboard focus is inside, and not with reduced motion.
+  // - A pill slides between nav links on hover/focus (FLIP: the pill takes its new size at once,
+  //   then animates from where it was with a transform).
+  // - A soft sheen follows the pointer across the glass (mouse and trackpad only).
+  const header = document.querySelector<HTMLElement>('[data-site-header]');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+
+  const SCROLLED_AT = 8; // px of scroll before the glass frosts over
+  const HIDE_AFTER = 480; // px: never hide near the top of the page
+  const DELTA = 6; // px of travel that counts as a change of direction
+
+  if (header) {
+    const bar = header.querySelector<HTMLElement>('.bar')!;
+
+    // ---- Scroll: frost and hide/show -----------------------------------------------------------
+    let lastY = scrollY;
+    let pending = false;
+    const busy = () => !!header.querySelector(':focus-visible, details[open]');
+
+    const onScroll = () => {
+      pending = false;
+      const y = scrollY;
+      header.toggleAttribute('data-scrolled', y > SCROLLED_AT);
+      if (y <= HIDE_AFTER || reducedMotion.matches) {
+        header.removeAttribute('data-hidden');
+        lastY = y;
+        return;
+      }
+      if (y > lastY + DELTA) {
+        if (!busy()) header.setAttribute('data-hidden', '');
+        lastY = y;
+      } else if (y < lastY - DELTA) {
+        header.removeAttribute('data-hidden');
+        lastY = y;
+      }
+    };
+    addEventListener(
+      'scroll',
+      () => {
+        if (!pending) {
+          pending = true;
+          requestAnimationFrame(onScroll);
+        }
+      },
+      { passive: true },
+    );
+    onScroll();
+    // Keyboard users tabbing into a hidden header get it back.
+    header.addEventListener('focusin', () => header.removeAttribute('data-hidden'));
+
+    // ---- Nav pill ------------------------------------------------------------------------------
+    const nav = header.querySelector<HTMLElement>('nav');
+    const pill = nav?.querySelector<HTMLElement>('.nav-pill');
+    if (nav && pill) {
+      const place = (link: HTMLElement) => {
+        const from = pill.getBoundingClientRect();
+        const wasOn = pill.hasAttribute('data-on');
+        pill.style.transition = 'none';
+        pill.style.left = `${link.offsetLeft}px`;
+        pill.style.width = `${link.offsetWidth}px`;
+        if (wasOn && !reducedMotion.matches) {
+          const to = pill.getBoundingClientRect();
+          pill.style.transform = `translateX(${from.left - to.left}px) scaleX(${from.width / to.width})`;
+        } else {
+          pill.style.transform = '';
+        }
+        pill.getBoundingClientRect(); // commit the starting point before animating from it
+        pill.style.transition = '';
+        pill.style.transform = '';
+        pill.setAttribute('data-on', '');
+      };
+      for (const link of nav.querySelectorAll<HTMLElement>('a')) {
+        link.addEventListener('pointerenter', () => place(link));
+        link.addEventListener('focus', () => place(link));
+      }
+      nav.addEventListener('pointerleave', () => {
+        if (!nav.contains(document.activeElement)) pill.removeAttribute('data-on');
+      });
+      nav.addEventListener('focusout', (event) => {
+        if (!nav.contains(event.relatedTarget as Node)) pill.removeAttribute('data-on');
+      });
+    }
+
+    // ---- Pointer sheen -------------------------------------------------------------------------
+    const sheen = header.querySelector<HTMLElement>('.sheen');
+    if (sheen && finePointer.matches && !reducedMotion.matches) {
+      bar.addEventListener('pointermove', (event) => {
+        const rect = bar.getBoundingClientRect();
+        sheen.style.transform = `translate(${event.clientX - rect.left}px, ${event.clientY - rect.top}px)`;
+      });
+      bar.addEventListener('pointerenter', () => header.setAttribute('data-lit', ''));
+      bar.addEventListener('pointerleave', () => header.removeAttribute('data-lit'));
+    }
+  }
+</script>
+
+<style>
+  /* A floating glass pill, detached from the top edge. */
+  .site-header {
+    position: fixed;
+    inset: var(--s-3) 0 auto;
+    z-index: var(--z-header);
+    padding-inline: var(--gutter);
+    pointer-events: none;
+    transition: transform 550ms var(--ease-spring);
+  }
+
+  /* Named only during a page transition (Layout.astro sets the class), so it stays put while the
+     page changes and its glass keeps blurring the rest of the time. */
+  :global(html.vt-header) .site-header {
+    view-transition-name: site-header;
+  }
+
+  /* Scrolling down tucks the header above the viewport; scrolling up brings it back. */
+  .site-header[data-hidden] {
+    transform: translateY(calc(-100% - var(--s-3) - 1rem));
+    transition-duration: 400ms;
+    transition-timing-function: var(--ease-in-out);
+  }
+
+  .bar {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: var(--s-2);
+    max-width: 64rem;
+    min-height: 3.5rem;
+    margin-inline: auto;
+    padding: 0.375rem 0.375rem 0.375rem var(--s-4);
+    border-radius: var(--r-pill);
+    color: var(--header-ink);
+    pointer-events: auto;
+    /* Page-load moment: the bar drops in once the preloader has opened. Transform only: fading the
+       bar itself would switch off the blur on the glass inside it while it fades. */
+    animation: bar-in 900ms var(--ease-spring) 80ms backwards;
+  }
+
+  /* Its shadow, a layer of its own so it can deepen with an opacity change. */
+  .bar::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    z-index: -2;
+    border-radius: inherit;
+    box-shadow:
+      0 22px 44px -22px rgb(0 0 0 / 0.65),
+      0 2px 6px rgb(0 0 0 / 0.12);
+    opacity: 0.45;
+    transition: opacity 450ms var(--ease-out);
+    pointer-events: none;
+  }
+
+  /* ---- Glass ------------------------------------------------------------------------------ */
+  .glass {
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    overflow: hidden;
+    border-radius: inherit;
+    background:
+      linear-gradient(180deg, color-mix(in srgb, var(--header-sheen) 70%, transparent), transparent 55%),
+      var(--header-glass);
+    box-shadow:
+      inset 0 0 0 1px var(--header-border),
+      inset 0 1px 0 var(--highlight);
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    pointer-events: none;
+    animation: fade-in 700ms var(--ease-out) 80ms backwards;
+  }
+
+  /* Frost: a denser tint over the same blur, faded in once the page scrolls under the header. */
+  .glass::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: var(--header-bg);
+    opacity: 0;
+    transition: opacity 450ms var(--ease-out);
+  }
+
+  /* Lit edge: a hairline that is brightest along the top, like light catching glass. */
+  .glass::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(180deg, var(--header-edge), transparent 45%, color-mix(in srgb, var(--header-edge) 40%, transparent));
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask:
+      linear-gradient(#000 0 0) content-box exclude,
+      linear-gradient(#000 0 0);
+  }
+
+  .site-header[data-scrolled] .glass::before,
+  .site-header[data-scrolled] .bar::before {
+    opacity: 1;
+  }
+
+  /* Pointer sheen: a soft light that trails the cursor across the glass. */
+  .sheen {
+    position: absolute;
+    left: -7rem;
+    top: -7rem;
+    width: 14rem;
+    height: 14rem;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, var(--header-sheen), transparent);
+    opacity: 0;
+    transition:
+      transform 500ms var(--ease-out),
+      opacity 400ms var(--ease-out);
+  }
+
+  .site-header[data-lit] .sheen {
+    opacity: 1;
+  }
+
+  /* ---- Contents ----------------------------------------------------------------------------- */
+  /* They rise in one after another, just after the bar lands. (:global, because the language
+     picker and theme switch carry their own component scope.) */
+  .bar > :global(:not(.glass)) {
+    animation: item-in 700ms var(--ease-spring) backwards;
+  }
+
+  .bar > :global(:nth-child(2)) {
+    animation-delay: 160ms;
+  }
+
+  .bar > :global(:nth-child(3)) {
+    animation-delay: 220ms;
+  }
+
+  .bar > :global(:nth-child(4)) {
+    animation-delay: 280ms;
+  }
+
+  .bar > :global(:nth-child(5)) {
+    animation-delay: 330ms;
+  }
+
+  .bar > :global(:nth-child(6)) {
+    animation-delay: 380ms;
+  }
+
+  .brand {
+    display: inline-flex;
+    align-items: center;
+    margin-right: auto;
+    border-radius: var(--r-pill);
+    color: var(--header-ink);
+  }
+
+  .brand :global(.brand-mark) {
+    display: none;
+  }
+
+  nav {
+    position: relative;
+  }
+
+  ul {
+    position: relative;
+    display: flex;
+    gap: 2px;
+    margin: 0 var(--s-2) 0 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    display: inline-flex;
+    align-items: center;
+    min-height: 2.5rem;
+    padding: 0 var(--s-3);
+    border-radius: var(--r-pill);
+    color: var(--header-muted);
+    font-size: var(--fs-sm);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 200ms var(--ease-out);
+  }
+
+  nav a:hover,
+  nav a:focus-visible {
+    color: var(--header-ink);
+  }
+
+  /* One highlight shared by the links, sliding to whichever is pointed at or focused. */
+  .nav-pill {
+    position: absolute;
+    top: 50%;
+    left: 0;
+    width: 0;
+    height: 2.5rem;
+    margin-top: -1.25rem;
+    border-radius: var(--r-pill);
+    background: var(--header-hover);
+    box-shadow: inset 0 1px 0 var(--highlight);
+    opacity: 0;
+    transform-origin: 0 50%;
+    transition:
+      transform 420ms var(--ease-spring),
+      opacity 250ms var(--ease-out);
+    pointer-events: none;
+  }
+
+  .nav-pill[data-on] {
+    opacity: 1;
+  }
+
+  .cta {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 2.75rem;
+    padding: 0 0.3125rem 0 var(--s-4);
+    overflow: hidden;
+    border-radius: var(--r-pill);
+    background: var(--accent);
+    color: var(--on-accent);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.45),
+      0 8px 20px -12px rgb(150 85 0 / 0.9);
+    transition:
+      background-color 200ms var(--ease-out),
+      transform 300ms var(--ease-spring);
+  }
+
+  /* A band of light crosses the button on hover. */
+  .cta::after {
+    content: '';
+    position: absolute;
+    inset: 0 auto 0 0;
+    width: 45%;
+    background: linear-gradient(100deg, transparent, rgb(255 255 255 / 0.55), transparent);
+    transform: translateX(-120%) skewX(-18deg);
+    pointer-events: none;
+  }
+
+  .cta:hover::after {
+    transform: translateX(320%) skewX(-18deg);
+    transition: transform 800ms var(--ease-out);
+  }
+
+  .cta:hover {
+    background: var(--accent-strong);
+  }
+
+  .cta:active {
+    transform: scale(0.97);
+  }
+
+  .cta-icon {
+    display: grid;
+    place-items: center;
+    width: 2.125rem;
+    height: 2.125rem;
+    border-radius: 50%;
+    background: rgb(20 14 2 / 0.12);
+    transition: transform 400ms var(--ease-spring);
+  }
+
+  .cta:hover .cta-icon {
+    transform: translateY(2px);
+  }
+
+  .cta-icon svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  @keyframes bar-in {
+    from {
+      transform: translateY(-1.5rem) scale(0.97);
+    }
+  }
+
+  @keyframes item-in {
+    from {
+      opacity: 0;
+      transform: translateY(-6px);
+    }
+  }
+
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  /* Hold the entrance until the preloader opens, so it plays in view. */
+  :global(html[data-preload='in']) .bar,
+  :global(html[data-preload='in']) .bar > :global(*),
+  :global(html[data-preload='in']) .glass {
+    animation-play-state: paused;
+  }
+
+  @media (max-width: 860px) {
+    nav {
+      display: none;
+    }
+  }
+
+  /* Phones: the form is already at the top of the page, so the header keeps language and theme instead. */
+  @media (max-width: 560px) {
+    .cta {
+      display: none;
+    }
+  }
+
+  /* Smallest phones: the icon alone (it still carries the name for screen readers). */
+  @media (max-width: 374px) {
+    .brand :global(.brand-full) {
+      display: none;
+    }
+
+    .brand :global(.brand-mark) {
+      display: block;
+    }
+  }
+</style>

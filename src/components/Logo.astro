@@ -1,0 +1,110 @@
+---
+// The SitesDownloader logo, inlined so it can follow the theme:
+//   - "Sites" uses currentColor (dark on light surfaces, light on dark ones)
+//   - "Downloader" uses the logo blue, lifted in dark mode (--logo-blue-1/2)
+// "full" crops to the icon + wordmark, "mark" to the icon alone. Gradient ids are unique per
+// instance so several logos can share a page.
+import { SITE } from '../config';
+
+interface Props {
+  variant?: 'full' | 'mark';
+  /** Rendered height in pixels; width follows the artwork's proportions. */
+  height?: number;
+  class?: string;
+}
+
+const { variant = 'full', height = 32, class: className } = Astro.props;
+const uid = Math.random().toString(36).slice(2, 8);
+const ids = { box: `logo-box-${uid}`, bolt: `logo-bolt-${uid}`, word: `logo-word-${uid}` };
+
+// The wordmark ends near x=666 with the macOS system font; the extra room covers wider fallbacks.
+const viewBox = variant === 'mark' ? [35, 25, 110, 110] : [30, 20, 660, 120];
+const width = Math.round((height * viewBox[2]) / viewBox[3]);
+---
+
+<svg
+  class:list={['logo', className]}
+  viewBox={viewBox.join(' ')}
+  width={width}
+  height={height}
+  role="img"
+  aria-label={SITE.name}
+>
+  <defs>
+    <linearGradient id={ids.box} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2563EB"></stop>
+      <stop offset="100%" stop-color="#1D4ED8"></stop>
+    </linearGradient>
+    <linearGradient id={ids.bolt} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#F59E0B"></stop>
+      <stop offset="100%" stop-color="#D97706"></stop>
+    </linearGradient>
+    <linearGradient id={ids.word} x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" class="word-stop-1"></stop>
+      <stop offset="100%" class="word-stop-2"></stop>
+    </linearGradient>
+  </defs>
+
+  <!-- Icon: browser window with a zipper track and a lightning-bolt pull -->
+  <g transform="translate(10, 0)">
+    <rect x="25" y="25" width="110" height="110" rx="20" fill={`url(#${ids.box})`}></rect>
+    <circle cx="45" cy="45" r="3.5" fill="#FFFFFF" opacity="0.8"></circle>
+    <circle cx="56" cy="45" r="3.5" fill="#FFFFFF" opacity="0.8"></circle>
+    <circle cx="67" cy="45" r="3.5" fill="#FFFFFF" opacity="0.8"></circle>
+    <line x1="25" y1="58" x2="135" y2="58" stroke="#FFFFFF" stroke-width="2" opacity="0.2"></line>
+    <path
+      d="M 62 68 L 72 68 M 62 78 L 70 78 M 62 88 L 74 88"
+      stroke="#FFFFFF"
+      stroke-width="3"
+      stroke-linecap="round"
+      opacity="0.4"></path>
+    <path
+      d="M 98 68 L 88 68 M 98 78 L 90 78 M 98 88 L 86 88"
+      stroke="#FFFFFF"
+      stroke-width="3"
+      stroke-linecap="round"
+      opacity="0.4"></path>
+    <path
+      d="M 80 58 L 92 78 H 82 L 84 100 L 68 76 H 78 Z"
+      fill={`url(#${ids.bolt})`}
+      stroke="#FFFFFF"
+      stroke-width="1.5"
+      stroke-linejoin="round"></path>
+  </g>
+
+  {
+    variant === 'full' && (
+      <>
+        {/* One <text> with two spans, so "Downloader" always follows "Sites" whatever system font renders it. */}
+        <text
+          x="160"
+          y="102"
+          font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+          font-size="64"
+          aria-hidden="true"
+        >
+          <tspan class="word-site" font-weight="700" letter-spacing="-1">Sites</tspan><tspan dx="4" font-weight="800" letter-spacing="-0.5" fill={`url(#${ids.word})`}>Downloader</tspan>
+        </text>
+      </>
+    )
+  }
+</svg>
+
+<style>
+  .logo {
+    flex: none;
+    overflow: visible;
+  }
+
+  .word-site {
+    fill: currentColor;
+  }
+
+  .word-stop-1 {
+    stop-color: var(--logo-blue-1);
+  }
+
+  .word-stop-2 {
+    stop-color: var(--logo-blue-2);
+  }
+</style>

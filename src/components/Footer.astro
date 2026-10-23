@@ -1,0 +1,171 @@
+---
+import { SITE } from '../config';
+import { LANGS, LANGUAGES, basePath, getLangFromUrl, localizePath, useTranslations } from '../i18n/utils';
+import Logo from './Logo.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const base = basePath(Astro.url);
+const year = new Date().getFullYear();
+const LINKS = [
+  { href: localizePath('/about', lang), label: t.footer.about },
+  { href: localizePath('/contact', lang), label: t.footer.contact },
+  { href: localizePath('/privacy-policy', lang), label: t.footer.privacy },
+  { href: localizePath('/terms-and-conditions', lang), label: t.footer.terms },
+];
+---
+
+<footer class="footer">
+  <div class="inner wrap">
+    <div class="brand">
+      <a href={localizePath('/', lang)} class="home" translate="no"><Logo height={30} /></a>
+      <p>{t.footer.tagline}</p>
+    </div>
+    <nav aria-label={t.nav.footerLabel}>
+      <ul>
+        {
+          LINKS.map((link) => (
+            <li>
+              <a href={link.href}>{link.label}</a>
+            </li>
+          ))
+        }
+      </ul>
+    </nav>
+    <div class="bottom">
+      <nav class="languages" aria-label={t.footer.languages}>
+        <ul>
+          {
+            LANGS.map((l) => (
+              <li>
+                <a
+                  href={localizePath(base, l)}
+                  hreflang={LANGUAGES[l].hreflang}
+                  lang={LANGUAGES[l].htmlLang}
+                  aria-current={l === lang ? 'true' : undefined}
+                >
+                  {LANGUAGES[l].label}
+                </a>
+              </li>
+            ))
+          }
+        </ul>
+      </nav>
+      <p class="copy">© {year} <span translate="no">{SITE.name}</span></p>
+    </div>
+  </div>
+  <p class="wordmark" aria-hidden="true" translate="no" style={`--chars: ${[...SITE.name].length}`}>{SITE.name}</p>
+</footer>
+
+<style>
+  .footer {
+    border-top: 1px solid var(--line);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    overflow: clip;
+  }
+
+  /* The name, very large and tone-on-tone, cut off by the bottom of the page. */
+  .wordmark {
+    margin: var(--s-4) 0 -0.18em;
+    color: var(--surface-2);
+    font-family: var(--font-display);
+    /* Sized by the name's length so it always spans the page without overflowing it. */
+    font-size: min(18rem, calc(240vw / var(--chars, 8)));
+    font-weight: 700;
+    font-stretch: 85%;
+    line-height: 0.8;
+    letter-spacing: -0.055em;
+    text-align: center;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .inner {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: var(--s-6);
+    padding-block: var(--s-7) var(--s-6);
+  }
+
+  .home {
+    display: inline-flex;
+    color: var(--ink);
+    border-radius: var(--r-sm);
+  }
+
+  .brand p {
+    max-width: 30rem;
+    margin-top: var(--s-3);
+    text-wrap: pretty;
+  }
+
+  ul {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--s-2) var(--s-5);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  nav a {
+    color: var(--ink);
+    font-weight: 500;
+    text-decoration: none;
+    transition: color 200ms var(--ease-out);
+  }
+
+  nav a:hover {
+    color: var(--ink);
+    text-decoration: underline;
+    text-decoration-color: var(--accent);
+    text-underline-offset: 0.25em;
+  }
+
+  .bottom {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--s-4) var(--s-6);
+    padding-top: var(--s-5);
+    border-top: 1px solid var(--line);
+  }
+
+  .languages ul {
+    gap: var(--s-2) var(--s-4);
+  }
+
+  .languages a {
+    color: var(--muted);
+    font-weight: 480;
+  }
+
+  .languages a[aria-current] {
+    color: var(--ink);
+    font-weight: 650;
+  }
+
+  @media (max-width: 720px) {
+    .inner {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    nav:not(.languages) ul {
+      flex-direction: column;
+      gap: 0;
+    }
+
+    nav a {
+      display: flex;
+      align-items: center;
+      min-height: 2.75rem;
+    }
+
+    .languages a {
+      min-height: 2.25rem;
+    }
+  }
+</style>

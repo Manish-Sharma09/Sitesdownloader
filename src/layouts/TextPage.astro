@@ -1,0 +1,115 @@
+---
+import { SITE } from '../config';
+import { LANGUAGES, absoluteUrl, basePath, getLangFromUrl, localizePath, useTranslations } from '../i18n/utils';
+import Layout from './Layout.astro';
+
+interface Props {
+  /** Shown in the <title> tag, before the brand. */
+  title: string;
+  description: string;
+  /** Visible page heading. Defaults to the title. */
+  heading?: string;
+  lead?: string;
+  /** ISO date (YYYY-MM-DD) the page last changed. */
+  updated?: string;
+  /** schema.org page type for the page's structured data. */
+  schemaType?: 'WebPage' | 'AboutPage' | 'ContactPage';
+  noindex?: boolean;
+  jsonLd?: object[];
+}
+
+const { heading, lead, updated, schemaType = 'WebPage', jsonLd = [], ...layoutProps } = Astro.props;
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+// Structured data: the page itself, and the organisation behind the site. About and contact pages are
+// about the organisation (mainEntity); the legal pages are published by it.
+const organization = {
+  '@type': 'Organization',
+  '@id': `${SITE.url}/#organization`,
+  name: SITE.name,
+  url: SITE.url,
+  logo: absoluteUrl('/web-app-manifest-512x512.png'),
+  email: SITE.email,
+  contactPoint: { '@type': 'ContactPoint', contactType: 'customer support', email: SITE.email },
+};
+const pageData = {
+  '@context': 'https://schema.org',
+  '@type': schemaType,
+  url: absoluteUrl(localizePath(basePath(Astro.url), lang)),
+  name: heading ?? layoutProps.title,
+  description: layoutProps.description,
+  inLanguage: LANGUAGES[lang].htmlLang,
+  isPartOf: { '@type': 'WebSite', name: SITE.name, url: absoluteUrl(localizePath('/', lang)) },
+  ...(schemaType === 'WebPage' ? { publisher: organization } : { mainEntity: organization }),
+  ...(updated && { dateModified: updated }),
+};
+const structuredData = layoutProps.noindex ? jsonLd : [pageData, ...jsonLd];
+const updatedDate =
+  updated &&
+  new Intl.DateTimeFormat(LANGUAGES[lang].htmlLang, { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(updated));
+// The translated sentence decides where the date goes ("Last updated {date}").
+const [beforeDate, afterDate] = t.common.lastUpdated.split('{date}');
+---
+
+<Layout {...layoutProps} jsonLd={structuredData}>
+  <header class="page-head stage">
+    <div class="stage-grid"></div>
+    <div class="wrap">
+      <h1>{heading ?? layoutProps.title}</h1>
+      {lead && <p class="lead">{lead}</p>}
+      {
+        updated && (
+          <p class="updated">
+            {beforeDate}
+            <time datetime={updated}>{updatedDate}</time>
+            {afterDate}
+          </p>
+        )
+      }
+    </div>
+  </header>
+  <div class="body wrap">
+    <div class="prose">
+      <slot />
+    </div>
+  </div>
+</Layout>
+
+<style>
+  .page-head {
+    --glow-x: 80%;
+    --glow-y: 20%;
+    --grid-mask: radial-gradient(50% 90% at 80% 100%, black 10%, transparent 75%);
+    padding-block: clamp(8rem, 14vw, 10rem) clamp(3rem, 7vw, 5rem);
+  }
+
+  h1 {
+    max-width: 18ch;
+    font-size: clamp(2.75rem, 1.6rem + 4vw, 4.75rem);
+    font-weight: 700;
+    font-stretch: 90%;
+    line-height: 0.98;
+    letter-spacing: -0.032em;
+    text-wrap: balance;
+  }
+
+  .lead {
+    max-width: 40rem;
+    margin-top: var(--s-5);
+    color: var(--stage-muted);
+    font-size: var(--fs-lg);
+    line-height: 1.5;
+    text-wrap: pretty;
+  }
+
+  .updated {
+    margin-top: var(--s-4);
+    color: var(--stage-muted);
+    font-size: var(--fs-sm);
+  }
+
+  .body {
+    padding-block: clamp(3rem, 7vw, 5rem) clamp(4rem, 9vw, 7rem);
+  }
+</style>

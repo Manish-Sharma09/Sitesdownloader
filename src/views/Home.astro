@@ -1,0 +1,47 @@
+---
+// Home page, shared by "/" and "/[lang]". Copy comes from the locale of the current URL.
+import Bookmarklet from '../components/Bookmarklet.astro';
+import CtaBand from '../components/CtaBand.astro';
+import Faq from '../components/Faq.astro';
+import Features from '../components/Features.astro';
+import Guide from '../components/Guide.astro';
+import Highlights from '../components/Highlights.astro';
+import Results from '../components/Results.astro';
+import Saver from '../components/Saver.astro';
+import Steps from '../components/Steps.astro';
+import TelegramCta from '../components/TelegramCta.astro';
+import { SITE } from '../config';
+import { LANGUAGES, absoluteUrl, getLangFromUrl, localizePath, useTranslations } from '../i18n/utils';
+import Layout from '../layouts/Layout.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+
+const jsonLd = [
+  {
+    '@context': 'https://schema.org',
+    '@type': 'WebApplication',
+    name: SITE.name,
+    url: absoluteUrl(localizePath('/', lang)),
+    description: t.meta.homeDescription,
+    inLanguage: LANGUAGES[lang].htmlLang,
+    applicationCategory: 'UtilitiesApplication',
+    operatingSystem: 'Any',
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    featureList: t.meta.appFeatures,
+  },
+];
+---
+
+<Layout jsonLd={jsonLd}>
+  <Saver />
+  <Results />
+  <Steps />
+  <Bookmarklet />
+  <Features />
+  <Highlights />
+  <Guide />
+  <Faq />
+  <TelegramCta />
+  <CtaBand />
+</Layout>

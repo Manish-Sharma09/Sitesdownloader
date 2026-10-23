@@ -1,0 +1,163 @@
+---
+// Long-form copy about the tool for search engines and for readers, from the locale files.
+// On wide screens a sticky contents list follows the reader and marks the section in view.
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+
+const t = useTranslations(getLangFromUrl(Astro.url));
+const { guide } = t;
+---
+
+<section class="guide section" aria-labelledby="guide-title">
+  <div class="layout wrap">
+    <nav class="toc" aria-label={guide.tocLabel}>
+      <p class="toc-title">{guide.tocTitle}</p>
+      <ol>
+        {
+          guide.sections.map((section) => (
+            <li>
+              <a href={`#${section.id}`}>{section.heading}</a>
+            </li>
+          ))
+        }
+      </ol>
+    </nav>
+    <article class="article">
+      <h2 id="guide-title">{guide.title}</h2>
+      <div class="prose">
+        <Fragment set:html={guide.introHtml} />
+        {
+          guide.sections.map((section) => (
+            <>
+              <h3 id={section.id}>{section.heading}</h3>
+              <Fragment set:html={section.html} />
+            </>
+          ))
+        }
+      </div>
+    </article>
+  </div>
+</section>
+
+<script>
+  // Mark the contents link for the section currently being read.
+  const links = new Map(
+    [...document.querySelectorAll<HTMLAnchorElement>('.toc a')].map((a) => [a.hash.slice(1), a]),
+  );
+  const observer = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (!entry.isIntersecting) continue;
+        for (const link of links.values()) link.removeAttribute('aria-current');
+        links.get(entry.target.id)?.setAttribute('aria-current', 'true');
+      }
+    },
+    { rootMargin: '-20% 0px -70% 0px' },
+  );
+  for (const id of links.keys()) {
+    const heading = document.getElementById(id);
+    if (heading) observer.observe(heading);
+  }
+</script>
+
+<style>
+  .layout {
+    display: grid;
+    grid-template-columns: 15rem minmax(0, 1fr);
+    gap: clamp(2rem, 6vw, 6rem);
+  }
+
+  /* ---- Contents: follows the reader and marks the section in view ----------------------- */
+  .toc {
+    position: sticky;
+    top: 6.5rem;
+    align-self: start;
+    padding-top: var(--s-2);
+  }
+
+  .toc-title {
+    margin-bottom: var(--s-3);
+    padding-left: var(--s-4);
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+
+  .toc ol {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    border-left: 1px solid var(--line);
+  }
+
+  .toc a {
+    position: relative;
+    display: block;
+    padding: var(--s-2) var(--s-4);
+    color: var(--muted);
+    font-size: var(--fs-sm);
+    line-height: 1.4;
+    text-decoration: none;
+    transition: color 160ms var(--ease-out);
+  }
+
+  .toc a::before {
+    content: '';
+    position: absolute;
+    left: -1px;
+    top: var(--s-1);
+    bottom: var(--s-1);
+    width: 2px;
+    border-radius: 2px;
+    background: var(--accent);
+    transform: scaleY(0);
+    transition: transform 240ms var(--ease-out);
+  }
+
+  .toc a:hover {
+    color: var(--ink);
+  }
+
+  .toc a[aria-current] {
+    color: var(--ink);
+    font-weight: 500;
+  }
+
+  .toc a[aria-current]::before {
+    transform: scaleY(1);
+  }
+
+  /* ---- Article ------------------------------------------------------------------------- */
+  h2 {
+    max-width: 40rem;
+    margin-bottom: var(--s-7);
+    font-size: var(--fs-2xl);
+    font-weight: 650;
+    font-stretch: 92%;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    text-wrap: balance;
+  }
+
+  /* The opening paragraphs read as a standfirst. */
+  .prose > :global(p:first-child) {
+    color: var(--ink);
+    font-size: var(--fs-lg);
+    line-height: 1.6;
+    letter-spacing: -0.01em;
+  }
+
+  .prose :global(h3) {
+    padding-top: var(--s-6);
+    border-top: 1px solid var(--line);
+  }
+
+  @media (max-width: 960px) {
+    .layout {
+      grid-template-columns: minmax(0, 1fr);
+    }
+
+    .toc {
+      display: none;
+    }
+  }
+</style>

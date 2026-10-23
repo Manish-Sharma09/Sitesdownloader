@@ -1,0 +1,144 @@
+---
+// "Save with SitesDownloader" bookmarklet: drag it to the bookmarks bar, click it on any page, and the
+// home page opens with that page's address filled in (?url=…). The link's href is written in the
+// browser from location.origin, so it points at whichever host serves the site.
+import { SITE } from '../config';
+import { format, getLangFromUrl, localizePath, useTranslations } from '../i18n/utils';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const home = localizePath('/', lang);
+---
+
+<section class="bookmarklet wrap" aria-labelledby="bookmarklet-title">
+  <div class="strip">
+    <svg class="icon" viewBox="0 0 24 24" width="28" height="28" aria-hidden="true">
+      <path d="M6.5 3.75h11a1 1 0 0 1 1 1v15.1a.5.5 0 0 1-.8.4L12 16.1l-5.7 4.15a.5.5 0 0 1-.8-.4V4.75a1 1 0 0 1 1-1Z"></path>
+      <path d="M12 7.5v5m0 0 2-2m-2 2-2-2"></path>
+    </svg>
+    <div class="copy">
+      <h2 id="bookmarklet-title">{t.bookmarklet.title}</h2>
+      <p>{format(t.bookmarklet.text, { name: SITE.name })}</p>
+    </div>
+    <a class="drag" href={home} data-bookmarklet={home} title={t.bookmarklet.dragHint} translate="no">
+      <svg viewBox="0 0 20 20" width="16" height="16" aria-hidden="true">
+        <path d="M10 3v10m0 0 4-4m-4 4-4-4M4 16h12"></path>
+      </svg>
+      <span>{format(t.bookmarklet.button, { name: SITE.name })}</span>
+    </a>
+    <p class="hint" role="status" data-bookmarklet-hint hidden>{t.bookmarklet.dragHint}</p>
+  </div>
+</section>
+
+<script>
+  for (const link of document.querySelectorAll<HTMLAnchorElement>('[data-bookmarklet]')) {
+    const target = new URL(link.dataset.bookmarklet!, location.origin).href;
+    link.href = `javascript:(()=>{location.href=${JSON.stringify(`${target}?url=`)}+encodeURIComponent(location.href)})()`;
+    // Clicking it here would only reload this page: explain that it is meant to be dragged.
+    link.addEventListener('click', (event) => {
+      event.preventDefault();
+      const hint = link.parentElement!.querySelector<HTMLElement>('[data-bookmarklet-hint]')!;
+      hint.hidden = false;
+    });
+  }
+</script>
+
+<style>
+  .bookmarklet {
+    padding-bottom: clamp(4rem, 8vw, 6.5rem);
+  }
+
+  .strip {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr) auto;
+    align-items: center;
+    gap: var(--s-3) var(--s-5);
+    padding: var(--s-4) var(--s-4) var(--s-4) var(--s-5);
+    border-radius: var(--r-xl);
+    background: var(--shell);
+    box-shadow: inset 0 0 0 1px var(--line);
+  }
+
+  .icon {
+    box-sizing: content-box;
+    padding: var(--s-3);
+    border-radius: 50%;
+    background: var(--accent-soft);
+    fill: none;
+    stroke: var(--accent);
+    stroke-width: 1.75;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  h2 {
+    font-size: var(--fs-lg);
+    font-weight: 650;
+    font-stretch: 94%;
+    line-height: 1.3;
+    letter-spacing: -0.02em;
+  }
+
+  .copy p {
+    max-width: 46rem;
+    margin-top: var(--s-1);
+    color: var(--muted);
+    text-wrap: pretty;
+  }
+
+  .drag {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--s-2);
+    min-height: 2.75rem;
+    padding: 0 var(--s-5);
+    border-radius: var(--r-pill);
+    background: var(--ink);
+    color: var(--bg);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+    white-space: nowrap;
+    text-decoration: none;
+    cursor: grab;
+    transition: transform 300ms var(--ease-spring);
+  }
+
+  .drag:active {
+    cursor: grabbing;
+    transform: scale(0.97);
+  }
+
+  .drag svg {
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .hint {
+    grid-column: 2 / -1;
+    color: var(--ink);
+    font-size: var(--fs-sm);
+    font-weight: 600;
+  }
+
+  .hint[hidden] {
+    display: none;
+  }
+
+  @media (max-width: 720px) {
+    .strip {
+      grid-template-columns: auto minmax(0, 1fr);
+    }
+
+    .drag {
+      grid-column: 1 / -1;
+      justify-self: start;
+    }
+
+    .hint {
+      grid-column: 1 / -1;
+    }
+  }
+</style>

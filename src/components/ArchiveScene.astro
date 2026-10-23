@@ -1,0 +1,1293 @@
+---
+// The hero illustration: a web page, the files it is made of, and the ZIP they are packed into.
+// HTML and CSS in a light 3D rig, plus one SVG for the dashed connectors (no WebGL, no images).
+// The hero script drives it through data attributes:
+//   data-state="idle | working | done"    files float beside the page, fly into the folder, or stay packed
+//   data-device="desktop | mobile | both"   a browser window, a phone, or both
+//   data-simplified                        the JavaScript file leaves the set
+// File names are updated through [data-label] (base name) and [data-dir] (folder) elements.
+// Everything is sized in cqw (1cqw = 1% of the scene's width), so the drawing scales as one piece
+// and lines up with the SVG, whose viewBox is 1000 × 860 scene units (10 units = 1cqw).
+import { getLangFromUrl, useTranslations } from '../i18n/utils';
+import { layerLabels, splitPath, zipName } from '../lib/preview';
+
+const { scene } = useTranslations(getLangFromUrl(Astro.url)).hero;
+const labels = layerLabels('example.com', { renameAssets: false, keepStructure: false, simplified: false });
+const css = splitPath(labels.css);
+const js = splitPath(labels.js);
+const media = splitPath(labels.media);
+
+// A row of firs along a lake shore, drawn as one path. Heights vary in a fixed pattern, so the
+// server and every visit draw the same trees.
+function firs(from: number, to: number, base: number, low: number, high: number) {
+  let d = `M${from} ${base}`;
+  const count = Math.floor((to - from) / 7);
+  for (let i = 0; i < count; i++) {
+    const x = from + i * 7;
+    const h = low + ((high - low) * i) / count + ((i * 7) % 5) * 1.6;
+    d += `L${x + 1} ${base - h * 0.3}L${x + 3.5} ${base - h}L${x + 6} ${base - h * 0.3}`;
+  }
+  return `${d}L${to} ${base}Z`;
+}
+const shoreLeft = firs(0, 84, 133, 9, 6);
+const shoreRight = firs(192, 322, 134, 12, 26);
+
+// Dashed connectors in scene units. "up" lines show a file feeding the page, the others carry
+// files down into the archive; dots travel along those.
+const LINES = [
+  { id: 'flow-html-up', file: 'html', up: true, d: 'M84 290 C 66 232, 110 196, 180 190' },
+  { id: 'flow-html', file: 'html', d: 'M132 436 C 136 540, 250 584, 330 640' },
+  { id: 'flow-css-up', file: 'css', up: true, d: 'M352 400 L 352 366' },
+  { id: 'flow-css', file: 'css', d: 'M420 523 C 424 560, 428 594, 432 630' },
+  { id: 'flow-js-up', file: 'js', up: true, d: 'M690 420 L 690 388' },
+  { id: 'flow-js', file: 'js', d: 'M592 543 C 586 582, 572 612, 556 638' },
+  { id: 'flow-media-up', file: 'media', up: true, d: 'M786 236 C 842 236, 866 276, 866 328' },
+  { id: 'flow-badge', file: 'media', d: 'M948 138 C 984 190, 986 280, 958 328' },
+  { id: 'flow-media', file: 'media', d: 'M860 540 C 852 640, 730 652, 654 672' },
+] as const;
+const DOTS = LINES.filter((line) => !('up' in line) && line.id !== 'flow-badge');
+---
+
+<div class="scene" id="scene" data-state="idle" data-device="desktop" aria-hidden="true">
+  <svg class="defs" width="0" height="0">
+    <defs>
+      <linearGradient id="ls-sky" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#4b6fae"></stop>
+        <stop offset="0.55" stop-color="#9db5da"></stop>
+        <stop offset="1" stop-color="#f6cfa2"></stop>
+      </linearGradient>
+      <linearGradient id="ls-far" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#8ba3cb"></stop>
+        <stop offset="1" stop-color="#b7c5de"></stop>
+      </linearGradient>
+      <linearGradient id="ls-peak" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#596e97"></stop>
+        <stop offset="1" stop-color="#2f4166"></stop>
+      </linearGradient>
+      <linearGradient id="ls-lake" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0" stop-color="#7e99c6"></stop>
+        <stop offset="1" stop-color="#26385a"></stop>
+      </linearGradient>
+      <clipPath id="ls-water"><rect y="129" width="320" height="51"></rect></clipPath>
+      <symbol id="landscape" viewBox="0 0 320 180">
+        <rect width="320" height="180" fill="url(#ls-sky)"></rect>
+        <circle cx="236" cy="62" r="34" fill="#ffe2b8" opacity="0.35"></circle>
+        <g id="ls-range">
+          <path fill="url(#ls-far)" d="M0 104 28 86l22 8 32-26 24 16 26-22 24 18 26-22 24 18 26-12 26 18 28-12 34 18v42H0Z"></path>
+          <path fill="url(#ls-peak)" d="M0 118 36 98l26 8 42-46 18 14 26-32 22 26 26-12 36 36 30-12 38 22 20-6v34H0Z"></path>
+          <path fill="#f3f5fa" d="m104 60-10 11 7-2 4 5 5-6 5 2Zm44-18-12 15 7-2 6 6 6-7 6 4Zm48 14-9 10 6-2 4 5 5-6 5 2Z"></path>
+        </g>
+        <rect y="129" width="320" height="51" fill="url(#ls-lake)"></rect>
+        <g clip-path="url(#ls-water)" opacity="0.3"><use href="#ls-range" transform="matrix(1 0 0 -1 0 260)"></use></g>
+        <path fill="#1f3d36" d={shoreLeft}></path>
+        <path fill="#152c27" d={shoreRight}></path>
+        <path stroke="#fff" stroke-opacity="0.35" stroke-width="1.2" stroke-linecap="round" d="M34 148h34m60 9h52m44-6h24m-176 18h20"></path>
+      </symbol>
+    </defs>
+  </svg>
+
+  <div class="halo"></div>
+
+  <div class="rig">
+    <div class="platform"></div>
+
+    <!-- The page being saved: a desktop browser, a phone, or both. -->
+    <div class="browser">
+      <div class="chrome">
+        <i></i><i></i><i></i>
+        <span class="url">
+          <svg viewBox="0 0 12 12" width="12" height="12"><rect x="2.5" y="5.25" width="7" height="5.25" rx="1.25"></rect><path d="M4 5.25V4a2 2 0 0 1 4 0v1.25"></path></svg>
+          <span class="url-text">https://<span data-label="host">example.com</span></span>
+        </span>
+      </div>
+      <div class="site">
+        <div class="site-nav">
+          <b>Example</b>
+          <span class="site-links">{scene.nav.map((item) => <span>{item}</span>)}</span>
+        </div>
+        <div class="site-hero">
+          <svg class="photo" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><use href="#landscape"></use></svg>
+          <p class="site-title">{scene.pageTitle}</p>
+        </div>
+        <div class="site-body">
+          <div class="text-col"><b></b><b></b><b></b></div>
+          <div class="text-col"><b></b><b></b><b></b></div>
+          <svg class="photo site-thumb" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><use href="#landscape"></use></svg>
+        </div>
+      </div>
+      <span class="scan"></span>
+    </div>
+
+    <div class="phone">
+      <span class="notch"></span>
+      <div class="phone-hero">
+        <svg class="photo" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><use href="#landscape"></use></svg>
+        <p class="phone-title">{scene.pageTitle}</p>
+      </div>
+      <div class="phone-body"><b></b><b></b><b></b><b></b></div>
+    </div>
+
+    <svg class="flow" viewBox="0 0 1000 860" preserveAspectRatio="none">
+      <defs>
+        <marker id="flow-head" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="15" markerHeight="15" markerUnits="userSpaceOnUse" orient="auto">
+          <path d="M0 0 10 5 0 10 2.5 5Z"></path>
+        </marker>
+      </defs>
+      {LINES.map((line) => <path id={line.id} class="line" data-file={line.file} data-up={'up' in line ? '' : undefined} d={line.d} marker-end="url(#flow-head)" />)}
+      <g class="dots">
+        {
+          DOTS.map((line, i) => (
+            <circle r="5" data-file={line.file}>
+              <animateMotion dur="2.6s" begin={`${1.8 + i * 0.65}s`} repeatCount="indefinite" calcMode="spline" keyTimes="0;1" keyPoints="0;1" keySplines="0.45 0 0.4 1">
+                <mpath href={`#${line.id}`} />
+              </animateMotion>
+              <animate attributeName="opacity" values="0;1;1;0" keyTimes="0;0.15;0.8;1" dur="2.6s" begin={`${1.8 + i * 0.65}s`} repeatCount="indefinite" />
+            </circle>
+          ))
+        }
+      </g>
+    </svg>
+
+    <!-- The files. --cx/--cy: the card's centre in scene units, used to fly it in and out. -->
+    <div class="file file-html" style="--n: 0; --cx: 145; --cy: 380">
+      <div class="card">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" width="24" height="24"><path class="shield" d="M4 2.5h16l-1.45 16.3L12 21.5l-6.55-2.7Z"></path><path class="five" d="M15.6 6.6H8.3l.45 5h6.3l-.5 4.4L12 16.8l-2.55-.8-.15-1.9"></path></svg>
+        </span>
+        <p class="name" data-label="html">index.html</p>
+        <span class="lines"><b></b><b></b></span>
+        <span class="lines wide"><b></b><b></b></span>
+      </div>
+    </div>
+
+    <div class="file file-css" style="--n: 1; --cx: 400; --cy: 468">
+      <div class="card">
+        <span class="icon"><b>{'{ }'}</b></span>
+        <p class="name" data-label="css">{css.base}</p>
+        <span class="dir" data-dir="css">{css.dir}</span>
+        <span class="lines wide"><b></b></span>
+      </div>
+    </div>
+
+    <div class="file file-js" style="--n: 2; --cx: 630; --cy: 488">
+      <div class="card">
+        <span class="icon"><b>JS</b></span>
+        <p class="name" data-label="js">{js.base}</p>
+        <span class="dir" data-dir="js">{js.dir}</span>
+        <span class="lines wide"><b></b></span>
+      </div>
+    </div>
+
+    <div class="file file-media" style="--n: 3; --cx: 862; --cy: 438">
+      <div class="card">
+        <span class="icon">
+          <svg viewBox="0 0 24 24" width="24" height="24"><circle cx="16.5" cy="8" r="2"></circle><path d="m3.5 18.5 5.75-7.25 4.25 5 2.5-2.75 4.5 5Z"></path></svg>
+        </span>
+        <p class="name" data-label="media">{media.base}</p>
+        <span class="dir" data-dir="media">{media.dir}</span>
+        <svg class="photo media-thumb" viewBox="0 0 320 180" preserveAspectRatio="xMidYMid slice"><use href="#landscape"></use></svg>
+      </div>
+    </div>
+
+    <!-- The archive -->
+    <div class="folder">
+      <div class="folder-back"><span class="tab"></span></div>
+      <span class="sheet sheet-1"></span>
+      <span class="sheet sheet-2"></span>
+      <div class="folder-front">
+        <span class="zipper"><span class="teeth"></span><span class="pull"><i></i></span></span>
+        <p class="zip-name" data-label="zip">{zipName('example.com')}</p>
+      </div>
+      <span class="check">
+        <svg viewBox="0 0 20 20" width="20" height="20"><path d="m5.5 10.5 3 3 6-7"></path></svg>
+      </span>
+    </div>
+
+    <div class="badge">
+      <div class="badge-core">
+        <span class="led"></span>
+        <span class="badge-text">
+          <span class="badge-state" data-for="idle"><b>{scene.idleTitle}</b><small>{scene.idleNote}</small></span>
+          <span class="badge-state" data-for="working"><b>{scene.workingTitle}</b><small>{scene.workingNote}</small></span>
+          <span class="badge-state" data-for="done"><b>{scene.doneTitle}</b><small>{scene.doneNote}</small></span>
+        </span>
+        <svg class="sparkle" viewBox="0 0 24 24" width="24" height="24"><path d="M12 2c.6 5.2 2.8 7.4 8 8-5.2.6-7.4 2.8-8 8-.6-5.2-2.8-7.4-8-8 5.2-.6 7.4-2.8 8-8Z"></path><path d="M19.5 15.5c.25 2 1 2.75 3 3-2 .25-2.75 1-3 3-.25-2-1-2.75-3-3 2-.25 2.75-1 3-3Z"></path></svg>
+      </div>
+    </div>
+
+    <span class="twinkle" style="--x: 93%; --y: 82%; --d: 0s"></span>
+    <span class="twinkle" style="--x: 6%; --y: 74%; --d: -1.4s"></span>
+    <span class="twinkle" style="--x: 9%; --y: 18%; --d: -2.3s"></span>
+  </div>
+</div>
+
+<script>
+  // Pointer tilt: the rig leans towards the cursor. Desktop pointers only, never with reduced motion,
+  // and the loop only runs while the pointer is moving and the scene is on screen.
+  // The SVG dots are SMIL animations, which CSS can't pause: stop them off screen and with reduced motion.
+  const MAX_TILT_X = 6; // degrees, up/down
+  const MAX_TILT_Y = 8; // degrees, left/right
+  const EASE = 0.08; // 0..1, lower = more inertia
+
+  const scene = document.querySelector<HTMLElement>('#scene');
+  const flow = scene?.querySelector<SVGSVGElement>('.flow');
+  const area = scene?.closest<HTMLElement>('[data-tilt-area]') ?? scene;
+  const finePointer = matchMedia('(hover: hover) and (pointer: fine)');
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
+
+  if (scene && flow && area) {
+    let target = { x: 0, y: 0 };
+    let current = { x: 0, y: 0 };
+    let frame = 0;
+    let visible = true;
+    const tilt = finePointer.matches && !reducedMotion.matches;
+
+    const tick = () => {
+      current.x += (target.x - current.x) * EASE;
+      current.y += (target.y - current.y) * EASE;
+      scene.style.setProperty('--rx', `${current.x.toFixed(3)}deg`);
+      scene.style.setProperty('--ry', `${current.y.toFixed(3)}deg`);
+      const settled = Math.abs(target.x - current.x) < 0.01 && Math.abs(target.y - current.y) < 0.01;
+      frame = settled || !visible ? 0 : requestAnimationFrame(tick);
+    };
+    const start = () => {
+      if (tilt && !frame && visible) frame = requestAnimationFrame(tick);
+    };
+
+    area.addEventListener('pointermove', (event) => {
+      const rect = area.getBoundingClientRect();
+      const nx = ((event.clientX - rect.left) / rect.width) * 2 - 1;
+      const ny = ((event.clientY - rect.top) / rect.height) * 2 - 1;
+      target = { x: -ny * MAX_TILT_X, y: nx * MAX_TILT_Y };
+      start();
+    });
+    area.addEventListener('pointerleave', () => {
+      target = { x: 0, y: 0 };
+      start();
+    });
+
+    const syncDots = () => (visible && !reducedMotion.matches ? flow.unpauseAnimations() : flow.pauseAnimations());
+    reducedMotion.addEventListener('change', syncDots);
+    new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      syncDots();
+      start();
+    }).observe(scene);
+  }
+</script>
+
+<style>
+  /* ---- Tokens: dark by default, the light theme below ---------------------------------- */
+  .scene {
+    --tilt-x: 7deg; /* camera pitch */
+    --tilt-y: -9deg; /* camera yaw */
+    --card: #131722;
+    --card-edge: rgb(255 255 255 / 0.09);
+    --card-ink: var(--ink);
+    --card-muted: var(--muted);
+    --skel: rgb(255 255 255 / 0.09);
+    --chrome: #171c29;
+    --flow: var(--logo-blue-2);
+    --halo: rgb(66 120 255 / 0.2);
+    --lift:
+      0 0 0 1px rgb(96 165 250 / 0.1),
+      0 0 2.6cqw rgb(59 130 246 / 0.16),
+      0 2.6cqw 4.5cqw -2cqw rgb(0 0 0 / 0.75);
+    --folder-ink: #4a3202;
+    --platform-fill: var(--glow-warm);
+
+    position: relative;
+    container-type: inline-size;
+    perspective: 1700px;
+    perspective-origin: 50% 40%;
+    pointer-events: none;
+    animation: fade-in 700ms var(--ease-out) 100ms backwards;
+  }
+
+  :global(:root[data-theme='light']) .scene {
+    --card: #ffffff;
+    --card-edge: rgb(37 99 235 / 0.1);
+    --skel: #e6e9f0;
+    --chrome: #f3f5fa;
+    --halo: rgb(96 150 255 / 0.36);
+    --platform-fill: rgb(255 255 255 / 0.85);
+    --lift:
+      0 0 0 1px rgb(37 99 235 / 0.1),
+      0 0 3cqw rgb(59 130 246 / 0.26),
+      0 2.6cqw 4.5cqw -2cqw rgb(30 58 138 / 0.28);
+  }
+
+  .defs {
+    position: absolute;
+  }
+
+  .halo {
+    position: absolute;
+    inset: -8% -6% -4%;
+    background:
+      radial-gradient(48% 42% at 52% 34%, var(--halo), transparent 72%),
+      radial-gradient(30% 22% at 47% 86%, var(--glow-warm), transparent 72%);
+    animation: fade-in 1200ms var(--ease-out) 200ms backwards;
+  }
+
+  .rig {
+    position: relative;
+    aspect-ratio: 1000 / 860;
+    transform-style: preserve-3d;
+    transform: rotateX(calc(var(--tilt-x) + var(--rx, 0deg))) rotateY(calc(var(--tilt-y) + var(--ry, 0deg)));
+  }
+
+  .rig > * {
+    position: absolute;
+  }
+
+  .photo {
+    display: block;
+    width: 100%;
+    height: 100%;
+  }
+
+  /* ---- Browser window -------------------------------------------------------------------- */
+  .browser {
+    left: 19%;
+    top: 1%;
+    width: 59cqw;
+    height: 41cqw;
+    display: flex;
+    flex-direction: column;
+    border-radius: 2.2cqw;
+    background: var(--card);
+    box-shadow: var(--lift);
+    overflow: hidden;
+    transition:
+      opacity 450ms var(--ease-out),
+      scale 600ms var(--ease-out);
+    animation: rise 1000ms var(--ease-spring) 150ms backwards;
+  }
+
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: 0.75cqw;
+    height: 4.6cqw;
+    padding: 0 1.6cqw;
+    background: var(--chrome);
+    border-bottom: 1px solid var(--card-edge);
+  }
+
+  .chrome i {
+    width: 1.1cqw;
+    height: 1.1cqw;
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+
+  .chrome i:nth-child(2) {
+    background: #febc2e;
+  }
+
+  .chrome i:nth-child(3) {
+    background: #28c840;
+  }
+
+  .url {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 0.7cqw;
+    height: 2.8cqw;
+    margin-left: 1.2cqw;
+    padding: 0 1.2cqw;
+    border-radius: var(--r-pill);
+    background: var(--card);
+    box-shadow: inset 0 0 0 1px var(--card-edge);
+    color: var(--card-muted);
+    font-family: var(--font-mono);
+    font-size: 1.35cqw;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  .url svg {
+    flex: none;
+    width: 1.3cqw;
+    height: 1.3cqw;
+    fill: none;
+    stroke: currentColor;
+    stroke-width: 1.4;
+  }
+
+  .url-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .site {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 1.4cqw;
+    padding: 1.4cqw 2.2cqw 2cqw;
+    min-height: 0;
+  }
+
+  .site-nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    color: var(--card-ink);
+    font-size: 1.15cqw;
+  }
+
+  .site-nav b {
+    font-family: var(--font-display);
+    font-size: 1.8cqw;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+  }
+
+  .site-links {
+    display: flex;
+    gap: 2.4cqw;
+    color: var(--card-muted);
+  }
+
+  .site-hero {
+    position: relative;
+    flex: 1.7;
+    min-height: 0;
+    border-radius: 1.2cqw;
+    overflow: hidden;
+  }
+
+  .site-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(100deg, rgb(10 16 32 / 0.55), transparent 55%);
+  }
+
+  .site-title {
+    position: absolute;
+    left: 3.6cqw;
+    top: 50%;
+    z-index: 1;
+    max-width: 24cqw;
+    translate: 0 -50%;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 3.4cqw;
+    font-weight: 700;
+    line-height: 1.04;
+    letter-spacing: -0.03em;
+    text-wrap: balance;
+  }
+
+  .site-title::after {
+    content: '';
+    display: block;
+    width: 6cqw;
+    height: 0.6cqw;
+    margin-top: 1.6cqw;
+    border-radius: var(--r-pill);
+    background: #fff;
+  }
+
+  .site-body {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.15fr;
+    gap: 2.4cqw;
+    min-height: 0;
+  }
+
+  .text-col {
+    display: flex;
+    flex-direction: column;
+    gap: 1cqw;
+    padding-top: 0.6cqw;
+  }
+
+  .text-col b,
+  .lines b,
+  .phone-body b {
+    display: block;
+    height: 1cqw;
+    border-radius: var(--r-pill);
+    background: var(--skel);
+  }
+
+  .text-col b:nth-child(2) {
+    width: 82%;
+  }
+
+  .text-col b:nth-child(3) {
+    width: 60%;
+  }
+
+  .site-thumb {
+    border-radius: 1cqw;
+  }
+
+  /* A light sweeping down the page while it is being saved. */
+  .scan {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+    height: 35%;
+    background: linear-gradient(180deg, transparent, color-mix(in srgb, var(--flow) 22%, transparent) 70%, transparent);
+    opacity: 0;
+    translate: 0 -100%;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  .scene[data-state='working'] .scan {
+    opacity: 1;
+    animation: scan 1600ms var(--ease-in-out) infinite;
+  }
+
+  @keyframes scan {
+    to {
+      translate: 0 300%;
+    }
+  }
+
+  /* ---- Phone: the mobile version, alone or next to the desktop one ------------------------ */
+  .phone {
+    left: 39.5%;
+    top: 1%;
+    width: 20cqw;
+    height: 41cqw;
+    display: flex;
+    flex-direction: column;
+    gap: 1.2cqw;
+    padding: 1.2cqw;
+    border-radius: 3cqw;
+    background: var(--card);
+    box-shadow:
+      var(--lift),
+      inset 0 0 0 0.5cqw var(--chrome);
+    opacity: 0;
+    scale: 0.9;
+    transform: translateZ(14px);
+    transition:
+      opacity 450ms var(--ease-out),
+      scale 600ms var(--ease-out),
+      translate 600ms var(--ease-out);
+  }
+
+  .notch {
+    align-self: center;
+    width: 5cqw;
+    height: 1cqw;
+    margin-top: 0.4cqw;
+    border-radius: var(--r-pill);
+    background: var(--skel);
+  }
+
+  .phone-hero {
+    position: relative;
+    height: 48%;
+    border-radius: 1.8cqw;
+    overflow: hidden;
+  }
+
+  .phone-hero::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(180deg, transparent 30%, rgb(10 16 32 / 0.6));
+  }
+
+  .phone-title {
+    position: absolute;
+    left: 1.6cqw;
+    right: 1.6cqw;
+    bottom: 1.6cqw;
+    z-index: 1;
+    color: #fff;
+    font-family: var(--font-display);
+    font-size: 2.1cqw;
+    font-weight: 700;
+    line-height: 1.05;
+    letter-spacing: -0.02em;
+  }
+
+  .phone-body {
+    display: flex;
+    flex-direction: column;
+    gap: 1.1cqw;
+    padding: 0.6cqw 0.8cqw;
+  }
+
+  .phone-body b:nth-child(even) {
+    width: 70%;
+  }
+
+  .scene[data-device='mobile'] .browser {
+    opacity: 0;
+    scale: 1.04;
+  }
+
+  .scene:is([data-device='mobile'], [data-device='both']) .phone {
+    opacity: 1;
+    scale: 1;
+  }
+
+  .scene[data-device='both'] .phone {
+    translate: 19.5cqw 2cqw;
+    scale: 0.68;
+  }
+
+  /* ---- Connectors ------------------------------------------------------------------------ */
+  .flow {
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    transform: translateZ(8px);
+  }
+
+  .line {
+    fill: none;
+    stroke: var(--flow);
+    stroke-width: 3;
+    stroke-dasharray: 9 9;
+    stroke-linecap: round;
+    opacity: 0.8;
+    transition: opacity 350ms var(--ease-out);
+    animation: fade-in 800ms var(--ease-out) 1300ms backwards;
+  }
+
+  marker path {
+    fill: var(--flow);
+  }
+
+  .dots circle {
+    fill: var(--flow);
+    stroke: color-mix(in srgb, var(--flow) 30%, transparent);
+    stroke-width: 8;
+    transition: opacity 300ms var(--ease-out);
+  }
+
+  /* Packing or packed: the files are in the folder, so their connectors go. */
+  .scene:is([data-state='working'], [data-state='done']) :is(.line, .dots) {
+    opacity: 0;
+  }
+
+  .scene[data-simplified] [data-file='js'],
+  .scene[data-device='mobile'] .line[data-up] {
+    opacity: 0;
+  }
+
+  /* ---- File cards ------------------------------------------------------------------------ */
+  .file {
+    --to-folder: calc((480 - var(--cx)) * 0.1cqw) calc((680 - var(--cy)) * 0.1cqw);
+    --from-page: calc((480 - var(--cx)) * 0.1cqw) calc((210 - var(--cy)) * 0.1cqw);
+    transform: translateZ(calc(34px + var(--n) * 6px));
+    transition:
+      translate 850ms var(--ease-in-out) calc(var(--n) * 90ms),
+      scale 850ms var(--ease-in-out) calc(var(--n) * 90ms),
+      opacity 450ms var(--ease-out) calc(var(--n) * 90ms);
+    /* Page-load moment: the files come out of the page one after another. */
+    animation: file-in 1000ms var(--ease-spring) calc(650ms + var(--n) * 120ms) backwards;
+  }
+
+  .file-html {
+    left: 1%;
+    top: 33.5%;
+    width: 27cqw;
+  }
+
+  .file-css {
+    left: 29.5%;
+    top: 46.7%;
+    width: 21cqw;
+  }
+
+  .file-js {
+    left: 52.5%;
+    top: 49.1%;
+    width: 21cqw;
+  }
+
+  .file-media {
+    left: 74%;
+    top: 38.7%;
+    width: 24.5cqw;
+  }
+
+  .card {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      'icon name'
+      'icon dir'
+      'more more';
+    align-items: center;
+    column-gap: 1.4cqw;
+    row-gap: 0.5cqw;
+    padding: 1.7cqw;
+    border-radius: 2cqw;
+    background: var(--card);
+    box-shadow: var(--lift);
+    animation: float 6s var(--ease-in-out) calc(var(--n) * -1.5s) infinite alternate;
+  }
+
+  .file-js .card {
+    background: color-mix(in srgb, var(--kind-js) 10%, var(--card));
+  }
+
+  .icon {
+    grid-area: icon;
+    display: grid;
+    place-items: center;
+    width: 5.4cqw;
+    height: 5.4cqw;
+    border-radius: 1.4cqw;
+    color: #fff;
+    background: linear-gradient(150deg, color-mix(in srgb, var(--tint) 70%, #fff), var(--tint) 55%, color-mix(in srgb, var(--tint) 80%, #000));
+    box-shadow:
+      inset 0 1px 0 rgb(255 255 255 / 0.3),
+      0 1cqw 2cqw -1cqw color-mix(in srgb, var(--tint) 80%, transparent);
+  }
+
+  .icon svg {
+    width: 62%;
+    height: 62%;
+  }
+
+  .icon b {
+    font-family: var(--font-display);
+    font-size: 2.3cqw;
+    font-weight: 800;
+    letter-spacing: -0.02em;
+  }
+
+  .file-html .icon {
+    --tint: #1d2231;
+    background: var(--tint);
+  }
+
+  .shield {
+    fill: var(--kind-html);
+  }
+
+  .five {
+    fill: none;
+    stroke: #1d2231;
+    stroke-width: 1.9;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  .file-css .icon {
+    --tint: var(--kind-css);
+  }
+
+  .file-js .icon {
+    --tint: var(--kind-js);
+  }
+
+  .file-media .icon {
+    --tint: var(--kind-image);
+  }
+
+  .file-media .icon svg {
+    fill: #fff;
+  }
+
+  .name {
+    grid-area: name;
+    align-self: end;
+    overflow: hidden;
+    color: var(--card-ink);
+    font-family: var(--font-mono);
+    font-size: 1.95cqw;
+    font-weight: 600;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .dir {
+    grid-area: dir;
+    align-self: start;
+    overflow: hidden;
+    color: var(--card-muted);
+    font-family: var(--font-mono);
+    font-size: 1.45cqw;
+    line-height: 1.3;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .lines {
+    grid-area: dir;
+    display: flex;
+    flex-direction: column;
+    gap: 0.8cqw;
+    align-self: start;
+    padding-top: 0.4cqw;
+  }
+
+  .lines b:last-child {
+    width: 65%;
+  }
+
+  .lines.wide {
+    grid-area: more;
+    margin-top: 1.2cqw;
+    padding-top: 0;
+  }
+
+  .media-thumb {
+    grid-area: more;
+    height: 9.5cqw;
+    margin-top: 1.2cqw;
+    border-radius: 1.2cqw;
+  }
+
+  /* Packing: each file flies down into the folder, shrinking as it goes in. */
+  .scene:is([data-state='working'], [data-state='done']) .file {
+    translate: var(--to-folder);
+    scale: 0.2;
+    opacity: 0;
+    transition-delay:
+      calc(var(--n) * 110ms),
+      calc(var(--n) * 110ms),
+      calc(450ms + var(--n) * 110ms);
+  }
+
+  .scene[data-simplified] .file-js {
+    translate: 0 4cqw;
+    scale: 0.85;
+    opacity: 0;
+  }
+
+  @keyframes file-in {
+    from {
+      translate: var(--from-page);
+      scale: 0.5;
+      opacity: 0;
+    }
+  }
+
+  @keyframes float {
+    to {
+      transform: translateY(-1.1cqw);
+    }
+  }
+
+  /* ---- Folder ---------------------------------------------------------------------------- */
+  .folder {
+    left: 31.5%;
+    top: 67.6%;
+    width: 33cqw;
+    height: 26.5cqw;
+    perspective: 60cqw;
+    perspective-origin: 50% 0%;
+    /* Just behind the connectors, so their arrowheads land on the folder. */
+    transform: translateZ(2px);
+    animation: rise 1000ms var(--ease-spring) 350ms backwards;
+  }
+
+  .folder-back {
+    position: absolute;
+    inset: 9% 0 0;
+    border-radius: 2.4cqw;
+    background: linear-gradient(180deg, #f3a417, #db8606);
+    box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.35);
+  }
+
+  .tab {
+    position: absolute;
+    left: 0;
+    bottom: calc(100% - 1.2cqw);
+    width: 40%;
+    height: 4.2cqw;
+    border-radius: 2cqw 2cqw 0 0;
+    background: #f3a417;
+  }
+
+  .tab::after {
+    content: '';
+    position: absolute;
+    left: 82%;
+    bottom: 0;
+    width: 4cqw;
+    height: 100%;
+    border-top-right-radius: 1.2cqw;
+    background: inherit;
+    transform: skewX(34deg);
+    transform-origin: 0 100%;
+  }
+
+  .sheet {
+    position: absolute;
+    left: 9%;
+    right: 9%;
+    top: 14%;
+    height: 50%;
+    border-radius: 1.4cqw;
+    background: #fff;
+    box-shadow: 0 0.4cqw 1cqw rgb(120 70 0 / 0.25);
+    transition: translate 500ms var(--ease-spring);
+  }
+
+  .sheet-1 {
+    rotate: -4deg;
+    background: #eef3ff;
+  }
+
+  .sheet-2 {
+    top: 18%;
+    left: 13%;
+    rotate: 3deg;
+  }
+
+  .folder-front {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 78%;
+    border-radius: 2.4cqw;
+    background:
+      radial-gradient(120% 70% at 50% 0%, rgb(255 255 255 / 0.32), transparent 60%),
+      linear-gradient(180deg, #ffd666 0%, #fdbf38 45%, #f3a51c 100%);
+    box-shadow:
+      inset 0 1.5px 0 rgb(255 255 255 / 0.65),
+      inset 0 -0.8cqw 1.6cqw rgb(180 95 0 / 0.28),
+      0 3cqw 5cqw -2.4cqw rgb(150 82 0 / 0.65);
+    transform-origin: 50% 100%;
+    transform: rotateX(-12deg);
+    transition: transform 700ms var(--ease-spring);
+  }
+
+  .zipper {
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 4.6cqw;
+    height: 12cqw;
+    translate: -50% 0;
+    border-radius: 0 0 1.2cqw 1.2cqw;
+    background: linear-gradient(90deg, #d88a0c, #c47905 50%, #d88a0c);
+    box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.3);
+  }
+
+  /* Two interlocking rows of metal teeth. */
+  .teeth {
+    position: absolute;
+    left: 50%;
+    top: 0.4cqw;
+    bottom: 0.6cqw;
+    width: 2.6cqw;
+    translate: -50% 0;
+    background:
+      repeating-linear-gradient(180deg, #eef1f6 0 0.5cqw, #9aa3b2 0.5cqw 0.6cqw, transparent 0.6cqw 1.1cqw) left / 50% 100% no-repeat,
+      repeating-linear-gradient(180deg, transparent 0 0.55cqw, #d3d8e1 0.55cqw 1.05cqw, #8b94a4 1.05cqw 1.1cqw) right / 50% 100% no-repeat;
+    border-radius: 0.3cqw;
+  }
+
+  .pull {
+    --pull-closed: 6.2cqw;
+    position: absolute;
+    left: 50%;
+    top: 0;
+    width: 3.2cqw;
+    height: 5.8cqw;
+    translate: -50% var(--pull-closed);
+    border-radius: 0.9cqw 0.9cqw 1.5cqw 1.5cqw;
+    background: linear-gradient(90deg, #7a8394, #f5f7fa 38%, #c8ced8 62%, #808a9b);
+    box-shadow:
+      0 0.5cqw 0.9cqw rgb(90 50 0 / 0.4),
+      inset 0 0 0 1px rgb(255 255 255 / 0.35);
+    transition: translate 900ms var(--ease-in-out);
+    animation: zip-in 1200ms var(--ease-in-out) 900ms backwards;
+  }
+
+  .pull i {
+    position: absolute;
+    left: 30%;
+    right: 30%;
+    top: 46%;
+    bottom: 14%;
+    border-radius: 0.6cqw;
+    background: #a86604;
+    box-shadow: inset 0 1px 1px rgb(0 0 0 / 0.35);
+  }
+
+  .zip-name {
+    position: absolute;
+    left: 6%;
+    right: 6%;
+    bottom: 13%;
+    overflow: hidden;
+    color: var(--folder-ink);
+    font-family: var(--font-display);
+    font-size: 2.75cqw;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    text-align: center;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  .check {
+    position: absolute;
+    right: -1.6cqw;
+    top: 8%;
+    display: grid;
+    place-items: center;
+    width: 5.6cqw;
+    height: 5.6cqw;
+    border-radius: 50%;
+    background: #22b573;
+    box-shadow:
+      0 0 0 0.6cqw color-mix(in srgb, #22b573 25%, transparent),
+      0 1cqw 2cqw -0.6cqw rgb(0 80 40 / 0.6);
+    opacity: 0;
+    scale: 0.3;
+    transform: translateZ(10px);
+    transition:
+      opacity 250ms var(--ease-out),
+      scale 500ms var(--ease-spring);
+  }
+
+  .check svg {
+    width: 60%;
+    height: 60%;
+    fill: none;
+    stroke: #fff;
+    stroke-width: 2.6;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+  }
+
+  /* Packing: the front opens to take the files, closes, and the zipper runs up and down
+     until the archive is ready. Packed: zipper shut, a tick on the folder. */
+  .scene[data-state='working'] .folder-front {
+    animation: intake 1300ms var(--ease-in-out);
+  }
+
+  .scene[data-state='working'] .sheet {
+    translate: 0 -1.2cqw;
+  }
+
+  .scene[data-state='working'] .pull {
+    animation: zipping 1100ms var(--ease-in-out) 1300ms infinite alternate;
+  }
+
+  .scene[data-state='done'] .folder {
+    animation: landed 600ms var(--ease-spring);
+  }
+
+  .scene[data-state='done'] .check {
+    opacity: 1;
+    scale: 1;
+    transition-delay: 150ms;
+  }
+
+  @keyframes intake {
+    35%,
+    65% {
+      transform: rotateX(-34deg);
+    }
+  }
+
+  @keyframes zipping {
+    from {
+      translate: -50% var(--pull-closed);
+    }
+    to {
+      translate: -50% 0.4cqw;
+    }
+  }
+
+  @keyframes zip-in {
+    from {
+      translate: -50% 0.4cqw;
+    }
+  }
+
+  @keyframes landed {
+    40% {
+      scale: 1.04;
+    }
+  }
+
+  /* ---- Platform the folder rests on ------------------------------------------------------ */
+  .platform {
+    left: 22%;
+    top: 88%;
+    width: 52cqw;
+    height: 11cqw;
+    border-radius: 50%;
+    background:
+      radial-gradient(closest-side, var(--platform-fill), transparent 80%),
+      radial-gradient(closest-side, transparent 70%, color-mix(in srgb, var(--flow) 16%, transparent));
+    box-shadow:
+      inset 0 0 0 1px color-mix(in srgb, var(--flow) 32%, transparent),
+      inset 0 0 2.4cqw color-mix(in srgb, var(--flow) 14%, transparent),
+      0 0 3cqw color-mix(in srgb, var(--flow) 16%, transparent);
+    animation: fade-in 1200ms var(--ease-out) 500ms backwards;
+  }
+
+  /* ---- Status badge ---------------------------------------------------------------------- */
+  /* Anchored on the right, so a longer translation grows in over the browser, not off the edge. */
+  .badge {
+    right: 1.5%;
+    top: 6.7%;
+    transform: translateZ(70px);
+    animation: pop 700ms var(--ease-spring) 1400ms backwards;
+  }
+
+  .badge-core {
+    display: flex;
+    align-items: center;
+    gap: 1.4cqw;
+    padding: 1.5cqw 1.8cqw;
+    border-radius: 2cqw;
+    background: var(--card);
+    box-shadow: var(--lift);
+    animation: float 5s var(--ease-in-out) -2.5s infinite alternate;
+  }
+
+  .led {
+    flex: none;
+    width: 2cqw;
+    height: 2cqw;
+    border-radius: 50%;
+    background: #22c55e;
+    box-shadow: 0 0 0 0.5cqw color-mix(in srgb, #22c55e 22%, transparent);
+    transition: background-color 300ms var(--ease-out);
+  }
+
+  .scene[data-state='working'] .led {
+    background: var(--accent);
+    box-shadow: 0 0 0 0.5cqw var(--accent-soft);
+    animation: blink 900ms var(--ease-in-out) infinite alternate;
+  }
+
+  .badge-text {
+    display: grid;
+  }
+
+  .badge-state {
+    grid-area: 1 / 1;
+    display: flex;
+    flex-direction: column;
+    opacity: 0;
+    translate: 0 0.8cqw;
+    transition:
+      opacity 300ms var(--ease-out),
+      translate 400ms var(--ease-out);
+  }
+
+  .scene[data-state='idle'] [data-for='idle'],
+  .scene[data-state='working'] [data-for='working'],
+  .scene[data-state='done'] [data-for='done'] {
+    opacity: 1;
+    translate: 0 0;
+    transition-delay: 120ms;
+  }
+
+  .badge-state b {
+    color: var(--card-ink);
+    font-family: var(--font-display);
+    font-size: 2cqw;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    white-space: nowrap;
+  }
+
+  .badge-state small {
+    color: var(--card-muted);
+    font-size: 1.5cqw;
+    line-height: 1.35;
+    white-space: nowrap;
+  }
+
+  .sparkle {
+    flex: none;
+    width: 2.6cqw;
+    height: 2.6cqw;
+    margin-left: 0.4cqw;
+    fill: var(--flow);
+    animation: glint 3.2s var(--ease-in-out) infinite;
+  }
+
+  /* ---- Twinkles -------------------------------------------------------------------------- */
+  .twinkle {
+    left: var(--x);
+    top: var(--y);
+    width: 1cqw;
+    height: 1cqw;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 0 1.6cqw 0.5cqw color-mix(in srgb, var(--flow) 70%, transparent);
+    transform: translateZ(40px);
+    animation: twinkle 3.6s var(--ease-in-out) var(--d) infinite;
+  }
+
+  /* ---- Shared keyframes ------------------------------------------------------------------ */
+  @keyframes fade-in {
+    from {
+      opacity: 0;
+    }
+  }
+
+  @keyframes rise {
+    from {
+      opacity: 0;
+      translate: 0 4cqw;
+    }
+  }
+
+  @keyframes pop {
+    from {
+      opacity: 0;
+      scale: 0.8;
+    }
+  }
+
+  @keyframes blink {
+    to {
+      opacity: 0.35;
+    }
+  }
+
+  @keyframes glint {
+    0%,
+    100% {
+      transform: scale(1) rotate(0deg);
+    }
+    50% {
+      transform: scale(0.82) rotate(45deg);
+    }
+  }
+
+  @keyframes twinkle {
+    0%,
+    100% {
+      opacity: 0.15;
+      scale: 0.6;
+    }
+    50% {
+      opacity: 1;
+      scale: 1;
+    }
+  }
+
+  /* Reduced motion: every state still shows, the travelling dots and float are gone. */
+  @media (prefers-reduced-motion: reduce) {
+    .dots {
+      display: none;
+    }
+  }
+</style>

@@ -1,0 +1,30 @@
+{
+  "name": "landing-page-download",
+  "type": "module",
+  "version": "0.0.1",
+  "engines": {
+    "node": ">=22.12.0"
+  },
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro",
+    "check:i18n": "node scripts/check-i18n.mjs"
+  },
+  "dependencies": {
+    "@astrojs/node": "^11.1.7",
+    "astro": "^7.3.8",
+    "cheerio": "^1.2.0",
+    "domhandler": "^6.0.1",
+    "js-beautify": "^2.0.3",
+    "jszip": "^3.10.2",
+    "undici": "^8.11.2"
+  },
+  "devDependencies": {
+    "@astrojs/check": "^0.9.10",
+    "@types/js-beautify": "^1.14.3",
+    "@types/node": "^26.6.4",
+    "typescript": "^6.0.3"
+  }
+}

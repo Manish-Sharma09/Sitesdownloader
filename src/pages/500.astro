@@ -1,0 +1,21 @@
+---
+// Shown for errors on server-rendered routes, in the language of the requested URL. Rendered on
+// demand, so the language follows the address. The error itself is deliberately not displayed:
+// it can contain stack traces or internal details.
+import ErrorPage from '../components/ErrorPage.astro';
+import { format, getLangFromUrl, pageParams, useTranslations } from '../i18n/utils';
+import Layout from '../layouts/Layout.astro';
+
+export const prerender = false;
+
+interface Props {
+  error: unknown;
+}
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang).serverError;
+---
+
+<Layout title={t.title} description={t.description} noindex>
+  <ErrorPage code="500" heading={t.heading} text={format(t.textHtml, pageParams(lang))} html button={t.button} />
+</Layout>

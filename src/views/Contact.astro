@@ -1,0 +1,29 @@
+---
+import { SITE } from '../config';
+import { format, getLangFromUrl, pageParams, useTranslations } from '../i18n/utils';
+import TextPage from '../layouts/TextPage.astro';
+
+const lang = getLangFromUrl(Astro.url);
+const t = useTranslations(lang);
+const params = pageParams(lang);
+---
+
+<TextPage
+  title={t.contact.title}
+  heading={t.contact.heading}
+  description={format(t.contact.description, params)}
+  lead={t.contact.lead}
+  schemaType="ContactPage"
+>
+  <p class="email">
+    <a href={`mailto:${SITE.email}`}>{SITE.email}</a>
+  </p>
+  <Fragment set:html={format(t.contact.bodyHtml, params)} />
+</TextPage>
+
+<style>
+  .email {
+    font-size: clamp(1.25rem, 1rem + 1vw, 1.625rem);
+    font-weight: 700;
+  }
+</style>

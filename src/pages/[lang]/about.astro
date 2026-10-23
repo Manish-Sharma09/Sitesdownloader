@@ -1,0 +1,11 @@
+---
+// The same page in every other language: /es/..., /ja/..., and so on.
+import { LANGS, defaultLang } from '../../i18n/ui';
+import About from '../../views/About.astro';
+
+export function getStaticPaths() {
+  return LANGS.filter((lang) => lang !== defaultLang).map((lang) => ({ params: { lang } }));
+}
+---
+
+<About />
