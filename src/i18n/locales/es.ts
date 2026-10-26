@@ -442,7 +442,7 @@ const es: Dict = {
       {
         question: '¿Hay un límite de tamaño?',
         answer:
-          'Una sola página puede incluir hasta 400 archivos, y varias páginas hasta 1000 entre todas. Cada archivo puede ocupar hasta 25 MB, con un máximo de 150 MB por ZIP y 20 páginas a la vez. Una descarga se detiene tras unos 90 segundos, o 150 segundos si son varias páginas o ambas versiones; los archivos que no se hayan guardado para entonces siguen enlazando a la web original y aparecen en el informe del ZIP.',
+          'Una sola página puede incluir hasta 400 archivos, y varias páginas hasta 1000 entre todas. Cada archivo puede ocupar hasta 25 MB, con un máximo de 30 MB por ZIP y 20 páginas a la vez. Una descarga se detiene tras unos 90 segundos, o 150 segundos si son varias páginas o ambas versiones; los archivos que no se hayan guardado para entonces siguen enlazando a la web original y aparecen en el informe del ZIP.',
       },
       {
         question: '¿En qué se diferencia de HTTrack y otros copiadores de sitios web?',

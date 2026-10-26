@@ -1,5 +1,5 @@
 // Keeps one visitor from tying up the server: at most a few downloads at a time per address.
-// In memory, per server process; enough for a single Node server, and nothing is stored.
+// In memory, per Worker isolate, so it limits bursts rather than guaranteeing a cap; nothing is stored.
 const MAX_PER_CLIENT = 2;
 const active = new Map<string, number>();
 

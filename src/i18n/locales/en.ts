@@ -439,7 +439,7 @@ const en = {
       {
         question: 'Is there a size limit?',
         answer:
-          'A single page can include up to 400 files, and several pages up to 1,000 between them. Each file can be up to 25 MB, with up to 150 MB per archive and 20 pages at a time. A download stops after about 90 seconds, or 150 seconds for several pages or both versions; any files not saved by then keep linking to the live site and are listed in the archive report.',
+          'A single page can include up to 400 files, and several pages up to 1,000 between them. Each file can be up to 25 MB, with up to 30 MB per archive and 20 pages at a time. A download stops after about 90 seconds, or 150 seconds for several pages or both versions; any files not saved by then keep linking to the live site and are listed in the archive report.',
       },
       {
         question: 'How is this different from HTTrack or other website copiers?',

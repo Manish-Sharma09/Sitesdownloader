@@ -41,7 +41,8 @@ export interface ArchiveResult {
 const LIMITS = {
   pageBytes: 10 * 1024 * 1024,
   assetBytes: 25 * 1024 * 1024,
-  totalBytes: 150 * 1024 * 1024,
+  /** Kept well under the 128 MB a Worker may use: the files, the ZIP chunks and the finished ZIP are all in memory at the end. */
+  totalBytes: 30 * 1024 * 1024,
   /** Files per version of the site; several pages share a bigger allowance. */
   maxAssets: 400,
   maxAssetsMulti: 1000,

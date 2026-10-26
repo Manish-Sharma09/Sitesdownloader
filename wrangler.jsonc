@@ -1,0 +1,18 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "sitesdownloader",
+  "main": "@astrojs/cloudflare/entrypoints/server",
+  "compatibility_date": "2026-10-12",
+  // Buffer and the node:* imports in src/lib need the Node.js compatibility layer.
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "binding": "ASSETS",
+    // Serve about.html at /about and es/index.html at /es, matching trailingSlash: 'never'.
+    "html_handling": "drop-trailing-slash"
+  },
+  // Parsing, prettifying and zipping a site is CPU-heavy. The account is on the Workers Free plan, which rejects
+  // CPU limits (10 ms per request). After upgrading to Paid (30 s by default), add: "limits": { "cpu_ms": 120000 }
+  "observability": {
+    "enabled": true
+  }
+}

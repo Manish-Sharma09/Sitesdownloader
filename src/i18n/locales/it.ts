@@ -430,7 +430,7 @@ const it: Dict = {
       {
         question: 'C’è un limite di dimensione?',
         answer:
-          'Una singola pagina può includere fino a 400 file, e più pagine fino a 1.000 in totale. Ogni file può arrivare a 25 MB, con un massimo di 150 MB per archivio e 20 pagine alla volta. Un download si interrompe dopo circa 90 secondi, o 150 secondi per più pagine o per entrambe le versioni; i file non ancora salvati a quel punto continuano a puntare al sito online e sono elencati nel report dell’archivio.',
+          'Una singola pagina può includere fino a 400 file, e più pagine fino a 1.000 in totale. Ogni file può arrivare a 25 MB, con un massimo di 30 MB per archivio e 20 pagine alla volta. Un download si interrompe dopo circa 90 secondi, o 150 secondi per più pagine o per entrambe le versioni; i file non ancora salvati a quel punto continuano a puntare al sito online e sono elencati nel report dell’archivio.',
       },
       {
         question: 'Che differenza c’è con HTTrack e altri programmi per copiare siti web?',

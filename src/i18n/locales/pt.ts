@@ -435,7 +435,7 @@ const pt: Dict = {
       {
         question: 'Existe limite de tamanho?',
         answer:
-          'Uma única página pode incluir até 400 arquivos, e várias páginas até 1.000 no total. Cada arquivo pode ter até 25 MB, com até 150 MB por arquivo ZIP e 20 páginas por vez. Um download para depois de cerca de 90 segundos, ou 150 segundos para várias páginas ou as duas versões; os arquivos que não foram salvos até lá continuam apontando para o site original e aparecem no relatório do ZIP.',
+          'Uma única página pode incluir até 400 arquivos, e várias páginas até 1.000 no total. Cada arquivo pode ter até 25 MB, com até 30 MB por arquivo ZIP e 20 páginas por vez. Um download para depois de cerca de 90 segundos, ou 150 segundos para várias páginas ou as duas versões; os arquivos que não foram salvos até lá continuam apontando para o site original e aparecem no relatório do ZIP.',
       },
       {
         question: 'Qual a diferença para o HTTrack e outros copiadores de sites?',

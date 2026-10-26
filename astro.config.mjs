@@ -1,7 +1,7 @@
 // @ts-check
 import { defineConfig } from 'astro/config';
 
-import node from '@astrojs/node';
+import cloudflare from '@astrojs/cloudflare';
 import { SITE } from './src/config.ts';
 
 // https://astro.build/config
@@ -10,10 +10,12 @@ export default defineConfig({
   trailingSlash: 'never',
   build: {
     // about.astro → about.html, but [lang]/index.astro → es/index.html. With 'file' the language home
-    // pages became es.html next to an es/ folder, and the Node server answered /es with a 404.
+    // pages became es.html next to an es/ folder, and /es answered with a 404.
     format: 'preserve',
   },
-  adapter: node({
-    mode: 'standalone',
+  // Nothing uses sessions or astro:assets, so skip the KV and Images bindings the adapter would provision.
+  session: false,
+  adapter: cloudflare({
+    imageService: 'passthrough',
   }),
 });

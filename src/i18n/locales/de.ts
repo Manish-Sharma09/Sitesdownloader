@@ -426,7 +426,7 @@ const de: Dict = {
       {
         question: 'Gibt es eine Größenbegrenzung?',
         answer:
-          'Eine einzelne Seite kann bis zu 400 Dateien enthalten, mehrere Seiten zusammen bis zu 1.000. Jede Datei darf bis zu 25 MB groß sein, ein Archiv bis zu 150 MB, und du kannst bis zu 20 Seiten auf einmal speichern. Ein Download bricht nach etwa 90 Sekunden ab, bei mehreren Seiten oder beiden Versionen nach 150 Sekunden; alle Dateien, die bis dahin nicht gespeichert wurden, verweisen weiterhin auf die Live-Website und werden im Archivbericht aufgeführt.',
+          'Eine einzelne Seite kann bis zu 400 Dateien enthalten, mehrere Seiten zusammen bis zu 1.000. Jede Datei darf bis zu 25 MB groß sein, ein Archiv bis zu 30 MB, und du kannst bis zu 20 Seiten auf einmal speichern. Ein Download bricht nach etwa 90 Sekunden ab, bei mehreren Seiten oder beiden Versionen nach 150 Sekunden; alle Dateien, die bis dahin nicht gespeichert wurden, verweisen weiterhin auf die Live-Website und werden im Archivbericht aufgeführt.',
       },
       {
         question: 'Was ist der Unterschied zu HTTrack und anderen Website-Kopierern?',

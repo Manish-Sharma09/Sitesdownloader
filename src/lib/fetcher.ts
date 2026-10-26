@@ -1,6 +1,5 @@
-import { lookup as dnsLookup, type LookupAddress } from 'node:dns';
+import { promises as dns } from 'node:dns';
 import { BlockList, isIP } from 'node:net';
-import { Agent, fetch } from 'undici';
 import type { Dict } from '../i18n/locales/en';
 
 export type ErrorKey = keyof Dict['errors'];
@@ -69,25 +68,39 @@ function isBlockedAddress(address: string): boolean {
   return blocked.check(address, family === 4 ? 'ipv4' : 'ipv6');
 }
 
-// DNS lookup used for every outgoing connection, so a hostname that resolves
-// to a private address is rejected at connect time (including after redirects).
-const guardedLookup = ((hostname: string, options: object, callback: (...args: unknown[]) => void) => {
-  dnsLookup(hostname, { ...options, all: true }, (err, addresses: LookupAddress[]) => {
-    if (err) return callback(err);
-    const publicAddresses = addresses.filter((a) => !isBlockedAddress(a.address));
-    if (publicAddresses.length === 0) {
-      return callback(Object.assign(new Error(`${hostname} resolves to a private address`), { code: 'EPRIVATE' }));
-    }
-    if ((options as { all?: boolean }).all) return callback(null, publicAddresses);
-    callback(null, publicAddresses[0].address, publicAddresses[0].family);
-  });
-}) as never;
+const NO_RECORDS = new Set(['ENODATA', 'ENOTFOUND']);
+const RESOLVE_TTL_MS = 60_000;
+const resolved = new Map<string, { at: number; addresses: Promise<string[]> }>();
 
-const agent = new Agent({
-  connect: { lookup: guardedLookup, timeout: 10_000 },
-  headersTimeout: 15_000,
-  bodyTimeout: 20_000,
-});
+/** Every A and AAAA address of a hostname, kept for a minute so a page's many assets don't each cost two lookups. */
+function addressesOf(hostname: string): Promise<string[]> {
+  const hit = resolved.get(hostname);
+  if (hit && Date.now() - hit.at < RESOLVE_TTL_MS) return hit.addresses;
+  const addresses = Promise.allSettled([dns.resolve4(hostname), dns.resolve6(hostname)]).then((results) =>
+    results.flatMap((r) => {
+      // On Workers the answers also list CNAME targets ("github.com."); only the addresses matter.
+      if (r.status === 'fulfilled') return r.value.filter((a) => isIP(a) !== 0);
+      if (NO_RECORDS.has((r.reason as { code?: string })?.code ?? '')) return [];
+      throw r.reason;
+    }),
+  );
+  addresses.catch(() => resolved.delete(hostname));
+  resolved.set(hostname, { at: Date.now(), addresses });
+  return addresses;
+}
+
+const fetchFailed = (message: string, code: string) =>
+  new TypeError('fetch failed', { cause: Object.assign(new Error(message), { code }) });
+
+// Workers can't hook the DNS lookup of the connection itself, so every hop's hostname is resolved first and
+// refused when any of its addresses is private. Failures look like a refused connection (cause.code), as before.
+async function assertPublicHost(url: URL): Promise<void> {
+  const host = url.hostname.replace(/^\[|\]$/g, '');
+  if (isIP(host)) return; // literal addresses are checked by assertFetchable
+  const addresses = await addressesOf(host);
+  if (addresses.length === 0) throw fetchFailed(`${host} does not resolve`, 'ENOTFOUND');
+  if (addresses.some(isBlockedAddress)) throw fetchFailed(`${host} resolves to a private address`, 'EPRIVATE');
+}
 
 /** Parse what someone typed into a URL we're willing to fetch. Adds https:// when the scheme is missing. */
 export function parsePublicUrl(input: string): URL {
@@ -150,8 +163,8 @@ export async function fetchPublic(input: string | URL, options: FetchOptions): P
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     assertFetchable(url);
+    await assertPublicHost(url);
     const response = await fetch(url, {
-      dispatcher: agent,
       redirect: 'manual',
       signal,
       headers: {

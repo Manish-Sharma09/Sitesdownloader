@@ -11,11 +11,14 @@ The name, domain and email are placeholders: set yours in `src/config.ts` before
 npm install
 npm run dev        # http://localhost:4321
 npm run build      # production build into dist/
-node dist/server/entry.mjs   # serve the build (HOST / PORT env vars supported)
+npm run preview    # serve the build locally in workerd, as on Cloudflare
+npm run deploy     # build, then deploy to Cloudflare Workers with Wrangler
 ```
 
 Requires Node 22.12+. The download endpoint runs on the server, so the site uses the
-`@astrojs/node` adapter in standalone mode. Deploy it anywhere that runs Node.
+`@astrojs/cloudflare` adapter and deploys as a Cloudflare Worker (`wrangler.jsonc`): prerendered
+pages are static assets, the API routes run in the Worker. Downloads need the Workers Paid plan;
+the Free plan's 10 ms CPU and 50 subrequests per request stop almost every archive.
 
 ## Download options
 

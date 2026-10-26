@@ -10,21 +10,22 @@
     "build": "astro build",
     "preview": "astro preview",
     "astro": "astro",
+    "deploy": "astro build && wrangler deploy",
     "check:i18n": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
-    "@astrojs/node": "^11.1.7",
-    "astro": "^7.3.8",
+    "@astrojs/cloudflare": "^14.4.2",
+    "astro": "^7.4.2",
     "cheerio": "^1.2.0",
     "domhandler": "^6.0.1",
     "js-beautify": "^2.0.3",
-    "jszip": "^3.10.2",
-    "undici": "^8.11.2"
+    "jszip": "^3.10.2"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@types/js-beautify": "^1.14.3",
     "@types/node": "^26.6.4",
-    "typescript": "^6.0.3"
+    "typescript": "^6.0.3",
+    "wrangler": "^4.152.0"
   }
 }

@@ -423,7 +423,7 @@ const fr: Dict = {
       {
         question: 'Y a-t-il une limite de taille ?',
         answer:
-          'Une seule page peut contenir jusqu’à 400 fichiers, et plusieurs pages jusqu’à 1 000 au total. Chaque fichier peut faire jusqu’à 25 Mo, avec 150 Mo maximum par archive et 20 pages à la fois. Un téléchargement s’arrête au bout d’environ 90 secondes, ou 150 secondes pour plusieurs pages ou les deux versions ; les fichiers qui n’ont pas été enregistrés à ce moment-là continuent de pointer vers le site en ligne et sont listés dans le rapport d’archive.',
+          'Une seule page peut contenir jusqu’à 400 fichiers, et plusieurs pages jusqu’à 1 000 au total. Chaque fichier peut faire jusqu’à 25 Mo, avec 30 Mo maximum par archive et 20 pages à la fois. Un téléchargement s’arrête au bout d’environ 90 secondes, ou 150 secondes pour plusieurs pages ou les deux versions ; les fichiers qui n’ont pas été enregistrés à ce moment-là continuent de pointer vers le site en ligne et sont listés dans le rapport d’archive.',
       },
       {
         question: 'Quelle différence avec HTTrack et les autres aspirateurs de sites ?',
