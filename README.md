@@ -16,18 +16,23 @@ npm run deploy     # build for Cloudflare Workers instead, then deploy with Wran
 ```
 
 Requires Node 22.19+. The download endpoint runs on the server, so the site needs a host that runs
-code, not only static files. Two targets share the same code:
+code, not only static files. Three targets share the same code:
 
 - **Node** (`@astrojs/node`, standalone), the default. On Hostinger this needs a Business or Cloud
-  plan: add the site as a **Node.js app** connected to the GitHub repo, with build command
-  `npm run build`, start command `npm run start` and Node 22.19 or later (24 is fine). A plain Git deploy into
+  plan: add the site as a **Node.js web app** connected to the GitHub repo, with the Astro preset,
+  build command `npm run build`, output directory `dist`, entry file `server/entry.mjs` and Node 24.
+  Without the entry file Hostinger deploys only the static pages. A plain Git deploy into
   `public_html` copies the source without building it and answers 403.
+- **Vercel** (`@astrojs/vercel`), picked automatically because Vercel sets `VERCEL=1` during its
+  builds. Import the GitHub repo with the Astro preset and the default settings. The API routes run as
+  one streaming Node function, so archives larger than Vercel's 4.5 MB body limit still download;
+  downloads stop well within the Hobby plan's 300 s limit.
 - **Cloudflare Workers** (`@astrojs/cloudflare`, `wrangler.jsonc`), with `npm run deploy`. Prerendered
   pages are static assets and the API routes run in the Worker. Downloads need the Workers Paid plan;
   the Free plan's 10 ms CPU and 50 subrequests per request stop almost every archive.
 
-Every hostname the site answers on goes in `SITE.url` or `SITE.aliases` (`src/config.ts`), so the
-server can read the visitor's IP from the proxy and limit downloads per visitor.
+On Node, every hostname the site answers on goes in `SITE.url` or `SITE.aliases` (`src/config.ts`),
+so the server can read the visitor's IP from the proxy and limit downloads per visitor.
 
 ## Download options
 

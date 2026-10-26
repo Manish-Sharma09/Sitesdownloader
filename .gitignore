@@ -30,3 +30,6 @@ pnpm-debug.log*
 # local backups and machine-specific settings
 .backup-*.tar.gz
 .claude/settings.local.json
+
+# Vercel build output and project link
+.vercel/

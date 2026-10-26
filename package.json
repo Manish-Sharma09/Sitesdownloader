@@ -23,6 +23,7 @@
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.2",
     "@astrojs/node": "^11.1.9",
+    "@astrojs/vercel": "^11.0.16",
     "astro": "^7.4.2",
     "cheerio": "^1.2.0",
     "domhandler": "^6.0.1",

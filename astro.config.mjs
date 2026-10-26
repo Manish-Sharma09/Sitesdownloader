@@ -3,10 +3,12 @@ import { defineConfig } from 'astro/config';
 
 import cloudflare from '@astrojs/cloudflare';
 import node from '@astrojs/node';
+import vercel from '@astrojs/vercel';
 import { SITE } from './src/config.ts';
 
-// `npm run build` makes a Node server (Hostinger). `npm run deploy` sets ASTRO_ADAPTER=cloudflare and builds a Worker.
-const onWorkers = process.env.ASTRO_ADAPTER === 'cloudflare';
+// `npm run build` makes a Node server (Hostinger), or Vercel Functions when Vercel runs the build (it sets VERCEL=1).
+// `npm run deploy` sets ASTRO_ADAPTER=cloudflare and builds a Worker.
+const target = process.env.ASTRO_ADAPTER ?? (process.env.VERCEL ? 'vercel' : 'node');
 
 // https://astro.build/config
 export default defineConfig({
@@ -24,5 +26,11 @@ export default defineConfig({
     // visitor shares the proxy's address and src/lib/guard.ts allows two downloads for the whole site.
     allowedDomains: [SITE.url, ...SITE.aliases].map((url) => ({ hostname: new URL(url).hostname })),
   },
-  adapter: onWorkers ? cloudflare({ imageService: 'passthrough' }) : node({ mode: 'standalone' }),
+  adapter:
+    target === 'cloudflare'
+      ? cloudflare({ imageService: 'passthrough' })
+      : target === 'vercel'
+        ? // Its functions stream the response, so ZIPs over Vercel's 4.5 MB body limit still go through.
+          vercel()
+        : node({ mode: 'standalone' }),
 });
