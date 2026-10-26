@@ -212,8 +212,6 @@ const de: Dict = {
     files: 'Dateien in diesem Archiv',
     columns: { file: 'Datei', from: 'Originaladresse', size: 'Größe' },
     problems: 'Nicht in diesem Archiv',
-    chooserTitle: 'Version von {host} auswählen',
-    chooserText: 'Dieses Archiv enthält zwei Kopien der Seite: die Version, die Desktop-Browser erhalten, und die, die Smartphones erhalten.',
   },
 
   bookmarklet: {

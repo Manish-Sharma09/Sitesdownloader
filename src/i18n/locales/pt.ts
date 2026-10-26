@@ -221,8 +221,6 @@ const pt: Dict = {
     files: 'Arquivos neste ZIP',
     columns: { file: 'Arquivo', from: 'Endereço original', size: 'Tamanho' },
     problems: 'Não incluídos neste ZIP',
-    chooserTitle: 'Escolha uma versão de {host}',
-    chooserText: 'Este ZIP traz duas cópias da página: a que os navegadores de desktop recebem e a que os celulares recebem.',
   },
 
   bookmarklet: {

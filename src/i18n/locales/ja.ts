@@ -206,8 +206,6 @@ const ja: Dict = {
     files: 'このアーカイブ内のファイル',
     columns: { file: 'ファイル', from: '元のアドレス', size: 'サイズ' },
     problems: 'このアーカイブに含まれないファイル',
-    chooserTitle: '{host}のバージョンを選択',
-    chooserText: 'このアーカイブには、デスクトップのブラウザ向けとスマートフォン向けの2種類のページのコピーが含まれています。',
   },
 
   bookmarklet: {

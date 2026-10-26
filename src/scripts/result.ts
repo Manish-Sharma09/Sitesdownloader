@@ -126,7 +126,6 @@ interface Folder {
 
 function entriesOf(m: Manifest): Entry[] {
   const entries: Entry[] = m.files.map((f: ManifestFile) => ({ path: f.path, bytes: f.bytes, kind: f.kind, locked: f.kind === 'html' }));
-  if (m.variants.length > 1) entries.unshift({ path: 'index.html', bytes: 0, kind: 'html', locked: true });
   entries.push({ path: REPORT_FILE, bytes: 0, kind: 'other', locked: true }, { path: MANIFEST_FILE, bytes: 0, kind: 'other', locked: true });
   return entries;
 }

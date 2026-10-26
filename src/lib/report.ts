@@ -23,9 +23,7 @@ th{color:var(--muted);font-weight:600}td.num{text-align:right;white-space:nowrap
 .swatches i{width:1.25rem;height:1.25rem;border-radius:50%;border:1px solid var(--line)}
 .chips{display:flex;flex-wrap:wrap;gap:.4rem;padding:0;list-style:none}.chips li{padding:.15rem .6rem;border-radius:999px;background:var(--bg);border:1px solid var(--line);font-size:.875rem}
 dl{display:grid;grid-template-columns:minmax(8rem,auto) 1fr;gap:.4rem 1rem;margin:0}dt{color:var(--muted)}dd{margin:0;word-break:break-word}
-.bad{color:var(--warn)}.versions{display:grid;gap:1rem;grid-template-columns:repeat(auto-fit,minmax(14rem,1fr));margin-top:1.5rem}
-.versions a{display:block;padding:1.5rem;border:1px solid var(--line);border-radius:16px;background:var(--surface);color:var(--ink);font-size:1.25rem;font-weight:700;text-decoration:none}
-.versions a:hover{border-color:var(--accent)}
+.bad{color:var(--warn)}
 `;
 
 function page(lang: string, title: string, body: string): string {
@@ -178,16 +176,4 @@ ${s.robots ? `<dt>${esc(ri.seoItems.robots)}</dt><dd>${esc(s.robots)}</dd>` : ''
     .join('')}</tbody></table>`);
 
   return page(lang, fill(t.report.title, { host: m.host }), parts.join('\n'));
-}
-
-/** The root index.html of an archive with both versions: two big links. */
-export function chooserHtml(m: Manifest, t: Dict, lang: string): string {
-  const links = m.variants
-    .map((v) => `<a href="${esc(v)}/index.html">${esc(t.hero.devices[v])}</a>`)
-    .join('');
-  return page(
-    lang,
-    fill(t.report.chooserTitle, { host: m.host }),
-    `<h1>${esc(fill(t.report.chooserTitle, { host: m.host }))}</h1><p class="muted">${esc(t.report.chooserText)}</p><div class="versions">${links}</div>`,
-  );
 }

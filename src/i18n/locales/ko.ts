@@ -201,7 +201,7 @@ const ko: Dict = {
     },
   },
 
-  // archive-report.html inside every archive, and the version chooser when it holds desktop and mobile.
+  // archive-report.html inside every archive.
   report: {
     title: '압축 파일 보고서: {host}',
     savedFrom: '{date}에 {url}에서 저장했어요.',
@@ -210,8 +210,6 @@ const ko: Dict = {
     files: '이 압축 파일에 든 파일',
     columns: { file: '파일', from: '원래 주소', size: '크기' },
     problems: '이 압축 파일에 없는 파일',
-    chooserTitle: '{host} 버전 선택',
-    chooserText: '이 압축 파일에는 페이지 사본이 두 개 들어 있어요. 하나는 데스크톱 브라우저가 받는 버전이고, 다른 하나는 휴대폰이 받는 버전이에요.',
   },
 
   // "Save from any tab" bookmarklet on the home page.

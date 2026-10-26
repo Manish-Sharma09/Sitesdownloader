@@ -213,7 +213,7 @@ const en = {
     },
   },
 
-  // archive-report.html inside every archive, and the version chooser when it holds desktop and mobile.
+  // archive-report.html inside every archive.
   report: {
     title: 'Archive report: {host}',
     savedFrom: 'Saved from {url} on {date}.',
@@ -222,8 +222,6 @@ const en = {
     files: 'Files in this archive',
     columns: { file: 'File', from: 'Original address', size: 'Size' },
     problems: 'Not in this archive',
-    chooserTitle: 'Choose a version of {host}',
-    chooserText: 'This archive holds two copies of the page: the one desktop browsers get and the one phones get.',
   },
 
   // "Save from any tab" bookmarklet on the home page.

@@ -20,7 +20,7 @@ import {
   REPORT_FILE,
 } from './manifest';
 import { type AssetKind, extensionOf, kindFromExtension, planPagePaths, planPaths, relativePath } from './paths';
-import { chooserHtml, reportHtml } from './report';
+import { reportHtml } from './report';
 
 export type { ArchiveOptions };
 
@@ -767,7 +767,6 @@ export async function archiveWebsite(request: ArchiveRequest): Promise<ArchiveRe
     limits: { assetBytes: LIMITS.assetBytes, maxAssets: urls.length > 1 ? LIMITS.maxAssetsMulti : LIMITS.maxAssets },
   };
 
-  if (devices.length > 1) zip.file('index.html', chooserHtml(manifest, t, request.htmlLang));
   zip.file(REPORT_FILE, reportHtml(manifest, t, request.htmlLang));
   zip.file(MANIFEST_FILE, JSON.stringify(manifest, null, 2));
 

@@ -209,8 +209,6 @@ const fr: Dict = {
     files: 'Fichiers de cette archive',
     columns: { file: 'Fichier', from: 'Adresse d’origine', size: 'Taille' },
     problems: 'Absents de cette archive',
-    chooserTitle: 'Choisissez une version de {host}',
-    chooserText: 'Cette archive contient deux copies de la page : celle que reçoivent les navigateurs d’ordinateur et celle que reçoivent les téléphones.',
   },
 
   bookmarklet: {

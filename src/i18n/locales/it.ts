@@ -204,7 +204,7 @@ const it: Dict = {
     },
   },
 
-  // archive-report.html inside every archive, and the version chooser when it holds desktop and mobile.
+  // archive-report.html inside every archive.
   report: {
     title: 'Report dell’archivio: {host}',
     savedFrom: 'Salvato da {url} il {date}.',
@@ -213,8 +213,6 @@ const it: Dict = {
     files: 'File in questo archivio',
     columns: { file: 'File', from: 'Indirizzo originale', size: 'Dimensione' },
     problems: 'Non inclusi in questo archivio',
-    chooserTitle: 'Scegli una versione di {host}',
-    chooserText: 'Questo archivio contiene due copie della pagina: quella che ricevono i browser desktop e quella che ricevono i telefoni.',
   },
 
   // "Save from any tab" bookmarklet on the home page.

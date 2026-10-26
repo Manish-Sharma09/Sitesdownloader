@@ -216,7 +216,7 @@ const es: Dict = {
     },
   },
 
-  // archive-report.html inside every archive, and the version chooser when it holds desktop and mobile.
+  // archive-report.html inside every archive.
   report: {
     title: 'Informe del ZIP: {host}',
     savedFrom: 'Guardado desde {url} el {date}.',
@@ -225,8 +225,6 @@ const es: Dict = {
     files: 'Archivos de este ZIP',
     columns: { file: 'Archivo', from: 'Dirección original', size: 'Tamaño' },
     problems: 'No incluidos en este ZIP',
-    chooserTitle: 'Elige una versión de {host}',
-    chooserText: 'Este ZIP contiene dos copias de la página: la que reciben los navegadores de escritorio y la que reciben los móviles.',
   },
 
   // "Save from any tab" bookmarklet on the home page.
