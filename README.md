@@ -15,12 +15,12 @@ npm start          # run that build (HOST / PORT env vars supported)
 npm run deploy     # build for Cloudflare Workers instead, then deploy with Wrangler
 ```
 
-Requires Node 22.12+. The download endpoint runs on the server, so the site needs a host that runs
+Requires Node 22.19+. The download endpoint runs on the server, so the site needs a host that runs
 code, not only static files. Two targets share the same code:
 
 - **Node** (`@astrojs/node`, standalone), the default. On Hostinger this needs a Business or Cloud
   plan: add the site as a **Node.js app** connected to the GitHub repo, with build command
-  `npm run build`, start command `npm run start` and Node 22 or later. A plain Git deploy into
+  `npm run build`, start command `npm run start` and Node 22.19 or later (24 is fine). A plain Git deploy into
   `public_html` copies the source without building it and answers 403.
 - **Cloudflare Workers** (`@astrojs/cloudflare`, `wrangler.jsonc`), with `npm run deploy`. Prerendered
   pages are static assets and the API routes run in the Worker. Downloads need the Workers Paid plan;

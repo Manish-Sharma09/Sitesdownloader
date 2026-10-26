@@ -1,6 +1,7 @@
-import { promises as dns } from 'node:dns';
-import { BlockList, isIP } from 'node:net';
+import { isIP } from 'node:net';
+import { fetchHop } from '#transport';
 import type { Dict } from '../i18n/locales/en';
+import { isBlockedAddress } from './addresses';
 
 export type ErrorKey = keyof Dict['errors'];
 
@@ -31,76 +32,6 @@ export const USER_AGENTS = {
   mobile:
     'Mozilla/5.0 (iPhone; CPU iPhone OS 18_6 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.6 Mobile/15E148 Safari/604.1',
 };
-
-// Requests to these ranges are refused so the server can't be used to reach internal services.
-// IPv4 rules also cover IPv4-mapped IPv6 (::ffff:a.b.c.d), so no separate ::ffff:0:0/96 rule is needed:
-// BlockList would apply that one to every IPv4 address.
-const blocked = new BlockList();
-for (const [net, prefix] of [
-  ['0.0.0.0', 8],
-  ['10.0.0.0', 8],
-  ['100.64.0.0', 10],
-  ['127.0.0.0', 8],
-  ['169.254.0.0', 16],
-  ['172.16.0.0', 12],
-  ['192.0.0.0', 24],
-  ['192.168.0.0', 16],
-  ['198.18.0.0', 15],
-  ['224.0.0.0', 4],
-  ['240.0.0.0', 4],
-] as const) {
-  blocked.addSubnet(net, prefix, 'ipv4');
-}
-for (const [net, prefix] of [
-  ['::', 128],
-  ['::1', 128],
-  ['64:ff9b::', 96],
-  ['fc00::', 7],
-  ['fe80::', 10],
-  ['ff00::', 8],
-] as const) {
-  blocked.addSubnet(net, prefix, 'ipv6');
-}
-
-function isBlockedAddress(address: string): boolean {
-  const family = isIP(address);
-  if (family === 0) return true;
-  return blocked.check(address, family === 4 ? 'ipv4' : 'ipv6');
-}
-
-const NO_RECORDS = new Set(['ENODATA', 'ENOTFOUND']);
-const RESOLVE_TTL_MS = 60_000;
-const resolved = new Map<string, { at: number; addresses: Promise<string[]> }>();
-
-/** Every A and AAAA address of a hostname, kept for a minute so a page's many assets don't each cost two lookups. */
-function addressesOf(hostname: string): Promise<string[]> {
-  const hit = resolved.get(hostname);
-  if (hit && Date.now() - hit.at < RESOLVE_TTL_MS) return hit.addresses;
-  const addresses = Promise.allSettled([dns.resolve4(hostname), dns.resolve6(hostname)]).then((results) =>
-    results.flatMap((r) => {
-      // On Workers the answers also list CNAME targets ("github.com."); only the addresses matter.
-      if (r.status === 'fulfilled') return r.value.filter((a) => isIP(a) !== 0);
-      if (NO_RECORDS.has((r.reason as { code?: string })?.code ?? '')) return [];
-      throw r.reason;
-    }),
-  );
-  addresses.catch(() => resolved.delete(hostname));
-  resolved.set(hostname, { at: Date.now(), addresses });
-  return addresses;
-}
-
-const fetchFailed = (message: string, code: string) =>
-  new TypeError('fetch failed', { cause: Object.assign(new Error(message), { code }) });
-
-// Workers can't hook the DNS lookup of the connection itself, so every hop's hostname is resolved first and
-// refused when any of its addresses is private. Failures look like a refused connection (cause.code), as before.
-async function assertPublicHost(url: URL): Promise<void> {
-  const host = url.hostname.replace(/^\[|\]$/g, '');
-  if (isIP(host)) return; // literal addresses are checked by assertFetchable
-  const addresses = await addressesOf(host);
-  if (addresses.length === 0) throw fetchFailed(`${host} does not resolve`, 'ENOTFOUND');
-  if (addresses.some(isBlockedAddress)) throw fetchFailed(`${host} resolves to a private address`, 'EPRIVATE');
-}
 
 /** Parse what someone typed into a URL we're willing to fetch. Adds https:// when the scheme is missing. */
 export function parsePublicUrl(input: string): URL {
@@ -163,9 +94,8 @@ export async function fetchPublic(input: string | URL, options: FetchOptions): P
 
   for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
     assertFetchable(url);
-    await assertPublicHost(url);
-    const response = await fetch(url, {
-      redirect: 'manual',
+    // Private hostnames are refused inside fetchHop: at connect time on Node, by a lookup first on Workers.
+    const response = await fetchHop(url, {
       signal,
       headers: {
         'user-agent': options.userAgent,
