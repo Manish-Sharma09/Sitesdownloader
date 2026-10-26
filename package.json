@@ -8,13 +8,15 @@
   "scripts": {
     "dev": "astro dev",
     "build": "astro build",
+    "start": "node ./dist/server/entry.mjs",
     "preview": "astro preview",
     "astro": "astro",
-    "deploy": "astro build && wrangler deploy",
+    "deploy": "ASTRO_ADAPTER=cloudflare astro build && wrangler deploy",
     "check:i18n": "node scripts/check-i18n.mjs"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.4.2",
+    "@astrojs/node": "^11.1.9",
     "astro": "^7.4.2",
     "cheerio": "^1.2.0",
     "domhandler": "^6.0.1",

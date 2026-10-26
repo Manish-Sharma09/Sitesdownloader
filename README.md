@@ -10,15 +10,24 @@ The name, domain and email are placeholders: set yours in `src/config.ts` before
 ```sh
 npm install
 npm run dev        # http://localhost:4321
-npm run build      # production build into dist/
-npm run preview    # serve the build locally in workerd, as on Cloudflare
-npm run deploy     # build, then deploy to Cloudflare Workers with Wrangler
+npm run build      # production build of the Node server into dist/
+npm start          # run that build (HOST / PORT env vars supported)
+npm run deploy     # build for Cloudflare Workers instead, then deploy with Wrangler
 ```
 
-Requires Node 22.12+. The download endpoint runs on the server, so the site uses the
-`@astrojs/cloudflare` adapter and deploys as a Cloudflare Worker (`wrangler.jsonc`): prerendered
-pages are static assets, the API routes run in the Worker. Downloads need the Workers Paid plan;
-the Free plan's 10 ms CPU and 50 subrequests per request stop almost every archive.
+Requires Node 22.12+. The download endpoint runs on the server, so the site needs a host that runs
+code, not only static files. Two targets share the same code:
+
+- **Node** (`@astrojs/node`, standalone), the default. On Hostinger this needs a Business or Cloud
+  plan: add the site as a **Node.js app** connected to the GitHub repo, with build command
+  `npm run build`, start command `npm run start` and Node 22 or later. A plain Git deploy into
+  `public_html` copies the source without building it and answers 403.
+- **Cloudflare Workers** (`@astrojs/cloudflare`, `wrangler.jsonc`), with `npm run deploy`. Prerendered
+  pages are static assets and the API routes run in the Worker. Downloads need the Workers Paid plan;
+  the Free plan's 10 ms CPU and 50 subrequests per request stop almost every archive.
+
+Every hostname the site answers on goes in `SITE.url` or `SITE.aliases` (`src/config.ts`), so the
+server can read the visitor's IP from the proxy and limit downloads per visitor.
 
 ## Download options
 

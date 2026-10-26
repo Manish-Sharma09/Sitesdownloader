@@ -6,6 +6,8 @@ export const SITE = {
   name: 'SitesDownloader',
   /** Production origin, no trailing slash. Used for canonical URLs, Open Graph and the sitemap. */
   url: 'https://sitesdownloader.com',
+  /** Other origins that serve this same build. The server trusts the proxy's visitor IP on these and on `url`. */
+  aliases: ['https://sitesdownloader.latesthealthhnews.com'],
   email: 'hello@sitesdownloader.com',
   /** Telegram bot username without the @. Leave empty to hide the Telegram section. */
   telegramBot: '',
